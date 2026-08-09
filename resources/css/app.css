@@ -4,46 +4,47 @@
 
 /* ---------------------------------------------------------------------------
    Design tokens — single source of truth for the color palette.
-   Tailwind utilities reference these via rgb(var(--color-*) / <alpha-value>).
+   Dark-first admin palette: deep charcoal surfaces with a violet primary
+   accent and cyan secondary accent.
    --------------------------------------------------------------------------- */
 :root {
     color-scheme: light;
 
-    --color-primary-50: 238 243 255;
-    --color-primary-100: 221 230 254;
-    --color-primary-200: 194 211 254;
-    --color-primary-300: 157 183 253;
-    --color-primary-400: 118 145 250;
-    --color-primary-500: 84 109 245;
-    --color-primary-600: 59 71 236;
-    --color-primary-700: 46 53 217;
-    --color-primary-800: 40 45 176;
-    --color-primary-900: 37 43 139;
-    --color-primary-950: 26 30 79;
+    --color-primary-50: 245 243 255;
+    --color-primary-100: 237 232 255;
+    --color-primary-200: 221 212 255;
+    --color-primary-300: 196 182 253;
+    --color-primary-400: 168 146 250;
+    --color-primary-500: 139 111 247;
+    --color-primary-600: 121 78 240;
+    --color-primary-700: 108 62 220;
+    --color-primary-800: 90 49 187;
+    --color-primary-900: 75 43 153;
+    --color-primary-950: 44 20 107;
 
-    --color-secondary-50: 242 246 251;
-    --color-secondary-100: 226 235 245;
-    --color-secondary-200: 197 215 236;
-    --color-secondary-300: 157 184 221;
-    --color-secondary-400: 111 148 201;
-    --color-secondary-500: 79 118 179;
-    --color-secondary-600: 61 93 151;
-    --color-secondary-700: 51 75 122;
-    --color-secondary-800: 44 63 100;
-    --color-secondary-900: 30 43 71;
-    --color-secondary-950: 20 29 48;
+    --color-secondary-50: 236 253 255;
+    --color-secondary-100: 207 249 255;
+    --color-secondary-200: 163 243 255;
+    --color-secondary-300: 99 233 252;
+    --color-secondary-400: 44 215 240;
+    --color-secondary-500: 21 188 224;
+    --color-secondary-600: 8 151 194;
+    --color-secondary-700: 10 120 158;
+    --color-secondary-800: 15 96 128;
+    --color-secondary-900: 17 79 105;
+    --color-secondary-950: 4 51 72;
 
-    --color-neutral-50: 248 250 252;
-    --color-neutral-100: 241 245 249;
-    --color-neutral-200: 226 232 240;
-    --color-neutral-300: 203 213 225;
-    --color-neutral-400: 148 163 184;
-    --color-neutral-500: 100 116 139;
-    --color-neutral-600: 71 85 105;
-    --color-neutral-700: 51 65 85;
-    --color-neutral-800: 30 41 59;
-    --color-neutral-900: 15 23 42;
-    --color-neutral-950: 2 6 23;
+    --color-neutral-50: 248 249 252;
+    --color-neutral-100: 241 243 248;
+    --color-neutral-200: 227 231 239;
+    --color-neutral-300: 205 211 223;
+    --color-neutral-400: 153 163 180;
+    --color-neutral-500: 103 115 136;
+    --color-neutral-600: 71 84 105;
+    --color-neutral-700: 50 62 82;
+    --color-neutral-800: 29 38 58;
+    --color-neutral-900: 15 22 40;
+    --color-neutral-950: 6 10 24;
 
     --color-success-50: 236 253 245;
     --color-success-100: 209 250 229;
@@ -110,8 +111,14 @@
         transition: background-color 0.2s ease, color 0.2s ease;
     }
 
+    .dark body {
+        background-image: radial-gradient(1200px 600px at 85% -10%, rgb(var(--color-primary-900) / 0.35), transparent 60%),
+            radial-gradient(900px 500px at 0% 110%, rgb(var(--color-secondary-900) / 0.25), transparent 55%);
+        background-attachment: fixed;
+    }
+
     ::selection {
-        @apply bg-primary-600/90 text-white;
+        @apply bg-primary-600 text-white;
     }
 
     :focus-visible {
@@ -131,7 +138,7 @@
     /* Thin, theme-aware scrollbars */
     * {
         scrollbar-width: thin;
-        scrollbar-color: rgb(148 163 184 / 0.5) transparent;
+        scrollbar-color: rgb(153 163 180 / 0.5) transparent;
     }
 
     ::-webkit-scrollbar {
@@ -153,14 +160,18 @@
 
 @layer components {
     /* -----------------------------------------------------------------------
-       Cards
+       Cards — dark glass surfaces
        ----------------------------------------------------------------------- */
     .card {
-        @apply overflow-hidden rounded-card border border-neutral-200/80 bg-white shadow-card dark:border-neutral-800 dark:bg-neutral-900;
+        @apply overflow-hidden rounded-card border border-neutral-200/80 bg-white shadow-card dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-none dark:ring-1 dark:ring-white/5;
+    }
+
+    .card-hover {
+        @apply transition-all duration-150 hover:-translate-y-0.5 hover:border-primary-400/50 hover:shadow-soft dark:hover:border-primary-500/40 dark:hover:bg-neutral-900 dark:hover:shadow-black/30;
     }
 
     .card-header {
-        @apply border-b border-neutral-200/80 px-5 py-4 dark:border-neutral-800 sm:px-6;
+        @apply border-b border-neutral-200/80 px-5 py-4 dark:border-white/10 sm:px-6;
     }
 
     .card-body {
@@ -175,11 +186,11 @@
     }
 
     .btn-primary {
-        @apply btn bg-primary-600 text-white shadow-card hover:bg-primary-500 focus-visible:ring-primary-500 active:bg-primary-700;
+        @apply btn bg-gradient-to-b from-primary-500 to-primary-700 text-white shadow-card shadow-primary-950/30 hover:from-primary-400 hover:to-primary-600 focus-visible:ring-primary-500 active:from-primary-600 active:to-primary-800;
     }
 
     .btn-secondary {
-        @apply btn border border-neutral-300 bg-white text-neutral-700 shadow-card hover:bg-neutral-50 focus-visible:ring-neutral-400 active:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700/70 dark:active:bg-neutral-700;
+        @apply btn border border-neutral-300 bg-white text-neutral-700 shadow-card hover:bg-neutral-50 focus-visible:ring-neutral-400 active:bg-neutral-100 dark:border-white/15 dark:bg-white/5 dark:text-neutral-200 dark:shadow-none dark:hover:bg-white/10 dark:active:bg-white/10;
     }
 
     .btn-danger {
@@ -191,7 +202,7 @@
     }
 
     .btn-ghost {
-        @apply btn text-neutral-600 hover:bg-neutral-100 focus-visible:ring-neutral-400 active:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:active:bg-neutral-800;
+        @apply btn text-neutral-600 hover:bg-neutral-100 focus-visible:ring-neutral-400 active:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-white/5 dark:active:bg-white/10;
     }
 
     .btn-link {
@@ -202,7 +213,7 @@
        Form controls
        ----------------------------------------------------------------------- */
     .input {
-        @apply block w-full rounded-control border-neutral-300 bg-white text-neutral-900 shadow-sm transition-colors placeholder:text-neutral-400 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:disabled:bg-neutral-800;
+        @apply block w-full rounded-control border-neutral-300 bg-white text-neutral-900 shadow-sm transition-colors placeholder:text-neutral-400 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-60 dark:border-white/15 dark:bg-white/5 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:disabled:bg-neutral-800;
     }
 
     .label {
@@ -221,27 +232,27 @@
     }
 
     .badge-success {
-        @apply bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400;
+        @apply bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400;
     }
 
     .badge-danger {
-        @apply bg-danger-50 text-danger-700 dark:bg-danger-500/10 dark:text-danger-400;
+        @apply bg-danger-50 text-danger-700 dark:bg-danger-500/15 dark:text-danger-400;
     }
 
     .badge-warning {
-        @apply bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400;
+        @apply bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400;
     }
 
     .badge-neutral {
-        @apply bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300;
+        @apply bg-neutral-100 text-neutral-600 dark:bg-white/10 dark:text-neutral-300;
     }
 
     .badge-primary {
-        @apply bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400;
+        @apply bg-primary-50 text-primary-700 dark:bg-primary-500/15 dark:text-primary-400;
     }
 
     .badge-info {
-        @apply bg-info-50 text-info-700 dark:bg-info-500/10 dark:text-info-400;
+        @apply bg-info-50 text-info-700 dark:bg-info-500/15 dark:text-info-400;
     }
 
     /* -----------------------------------------------------------------------
@@ -275,7 +286,7 @@
     }
 
     .table-head {
-        @apply bg-neutral-50 text-2xs font-semibold uppercase tracking-wider text-neutral-500 dark:bg-neutral-800/60 dark:text-neutral-400;
+        @apply bg-neutral-50 text-2xs font-semibold uppercase tracking-wider text-neutral-500 dark:bg-white/5 dark:text-neutral-400;
     }
 
     .table-head th {
@@ -283,7 +294,7 @@
     }
 
     .table-body {
-        @apply divide-y divide-neutral-200 dark:divide-neutral-800;
+        @apply divide-y divide-neutral-200 dark:divide-white/10;
     }
 
     .table-body td {
@@ -291,7 +302,7 @@
     }
 
     .table-body tr {
-        @apply transition-colors duration-150 hover:bg-neutral-50 dark:hover:bg-neutral-800/40;
+        @apply transition-colors duration-150 hover:bg-neutral-50 dark:hover:bg-white/5;
     }
 
     .table-empty td {
@@ -299,18 +310,18 @@
     }
 
     /* -----------------------------------------------------------------------
-       Navigation
+       Navigation (sidebar)
        ----------------------------------------------------------------------- */
     .nav-link {
         @apply inline-flex items-center gap-2 rounded-control px-3 py-2 text-sm font-medium transition-colors duration-150 focus:outline-none;
     }
 
     .nav-link-active {
-        @apply bg-white/15 text-white;
+        @apply border-s-2 border-primary-400 bg-primary-500/15 text-white;
     }
 
     .nav-link-idle {
-        @apply text-neutral-300 hover:bg-white/10 hover:text-white;
+        @apply text-neutral-400 hover:bg-white/5 hover:text-white;
     }
 
     /* -----------------------------------------------------------------------
@@ -320,9 +331,9 @@
         @apply animate-shimmer rounded bg-neutral-200 dark:bg-neutral-800;
         background-image: linear-gradient(
             90deg,
-            rgb(148 163 184 / 0) 0,
-            rgb(148 163 184 / 0.25) 50%,
-            rgb(148 163 184 / 0) 100%
+            rgb(153 163 180 / 0) 0,
+            rgb(153 163 180 / 0.25) 50%,
+            rgb(153 163 180 / 0) 100%
         );
         background-size: 800px 100%;
         background-repeat: no-repeat;

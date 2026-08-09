@@ -24,7 +24,7 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             {{-- KPI cards --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <button type="button" @click="$dispatch('open-modal', 'card-checked-in')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-checked-in')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-primary-500 to-primary-700 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -37,7 +37,7 @@
                     </div>
                 </button>
 
-                <button type="button" @click="$dispatch('open-modal', 'card-on-clock')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-on-clock')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-secondary-600 to-secondary-800 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -50,7 +50,7 @@
                     </div>
                 </button>
 
-                <button type="button" @click="$dispatch('open-modal', 'card-rate')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-rate')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-success-500 to-success-700 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -63,7 +63,7 @@
                     </div>
                 </button>
 
-                <button type="button" @click="$dispatch('open-modal', 'card-employees')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-employees')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-info-500 to-info-700 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -76,7 +76,7 @@
                     </div>
                 </button>
 
-                <button type="button" @click="$dispatch('open-modal', 'card-locations')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-locations')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-primary-500 to-secondary-700 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -89,7 +89,7 @@
                     </div>
                 </button>
 
-                <button type="button" @click="$dispatch('open-modal', 'card-logs-today')" class="card group p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-soft focus:outline-none">
+                <button type="button" @click="$dispatch('open-modal', 'card-logs-today')" class="card card-hover group p-5 text-left focus:outline-none">
                     <div class="flex items-center gap-4">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-warning-500 to-warning-700 shadow-card">
                             <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -401,7 +401,7 @@
 
             const themeColors = {
                 light: { default: '#64748b', grid: 'rgba(148, 163, 184, 0.25)', card: '#ffffff', absent: '#e2e8f0' },
-                dark: { default: '#94a3b8', grid: 'rgba(148, 163, 184, 0.12)', card: '#0f172a', absent: '#334155' },
+                dark: { default: '#99a3b4', grid: 'rgba(148, 163, 184, 0.12)', card: '#0f1628', absent: '#334155' },
             };
 
             function buildCharts() {
@@ -416,8 +416,8 @@
                     data: {
                         labels: data.labels,
                         datasets: [
-                            { label: 'Time in', data: data.ins, backgroundColor: '#3b47ec', hoverBackgroundColor: '#2e35d9', borderRadius: 5, maxBarThickness: 34 },
-                            { label: 'Time out', data: data.outs, backgroundColor: '#7691fa', hoverBackgroundColor: '#546df5', borderRadius: 5, maxBarThickness: 34 },
+                            { label: 'Time in', data: data.ins, backgroundColor: '#794ef0', hoverBackgroundColor: '#6c3edc', borderRadius: 5, maxBarThickness: 34 },
+                            { label: 'Time out', data: data.outs, backgroundColor: '#15bce0', hoverBackgroundColor: '#0b97c2', borderRadius: 5, maxBarThickness: 34 },
                         ],
                     },
                     options: {
@@ -438,12 +438,12 @@
                         datasets: [{
                             label: 'Logs',
                             data: data.totals,
-                            borderColor: '#3b47ec',
-                            backgroundColor: 'rgba(59, 71, 236, 0.18)',
+                            borderColor: '#794ef0',
+                            backgroundColor: 'rgba(121, 78, 240, 0.18)',
                             fill: true,
                             tension: 0.35,
-                            pointBackgroundColor: '#3b47ec',
-                            pointBorderColor: isDark ? '#0f172a' : '#ffffff',
+                            pointBackgroundColor: '#794ef0',
+                            pointBorderColor: isDark ? '#0f1628' : '#ffffff',
                             pointRadius: 4,
                             pointHoverRadius: 6,
                         }],
@@ -465,8 +465,8 @@
                         labels: data.statusLabels,
                         datasets: [{
                             data: data.statusData,
-                            backgroundColor: ['#3b47ec', '#546df5', t.absent],
-                            hoverBackgroundColor: ['#2e35d9', '#3b47ec', t.absent],
+                            backgroundColor: ['#794ef0', '#15bce0', t.absent],
+                            hoverBackgroundColor: ['#6c3edc', '#7a4ef0', t.absent],
                             borderWidth: 3,
                             borderColor: t.card,
                         }],
@@ -485,8 +485,8 @@
                         labels: data.locationLabels,
                         datasets: [{
                             data: data.locationData,
-                            backgroundColor: ['#3b47ec', '#7691fa', '#0ea5e9', '#10b981', '#f59e0b', '#94a3b8'],
-                            hoverBackgroundColor: ['#2e35d9', '#546df5', '#0284c7', '#059669', '#d97706', '#64748b'],
+                            backgroundColor: ['#794ef0', '#15bce0', '#0ea5e9', '#10b981', '#f59e0b', '#94a3b8'],
+                            hoverBackgroundColor: ['#6c3edc', '#0b97c2', '#0284c7', '#059669', '#d97706', '#64748b'],
                             borderWidth: 3,
                             borderColor: t.card,
                         }],

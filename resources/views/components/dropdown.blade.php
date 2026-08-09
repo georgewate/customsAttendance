@@ -4,6 +4,7 @@
 $alignmentClasses = match ($align) {
     'left' => 'ltr:origin-top-left rtl:origin-top-right start-0',
     'top' => 'origin-top',
+    'bottom' => 'ltr:origin-bottom-left rtl:origin-bottom-right start-0 bottom-full mb-2',
     default => 'ltr:origin-top-right rtl:origin-top-left end-0',
 };
 
@@ -25,7 +26,7 @@ $width = match ($width) {
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 scale-100"
             x-transition:leave-end="opacity-0 scale-95"
-            class="absolute z-50 mt-2 {{ $width }} rounded-control border border-neutral-200 bg-white shadow-soft dark:border-neutral-700 dark:bg-neutral-800 {{ $alignmentClasses }}"
+            class="absolute z-50 {{ $align === 'bottom' ? 'mb-2' : 'mt-2' }} {{ $width }} rounded-control border border-neutral-200 bg-white shadow-soft dark:border-white/10 dark:bg-neutral-800 {{ $alignmentClasses }}"
             style="display: none;"
             @click="open = false">
         <div class="rounded-control {{ $contentClasses }}">

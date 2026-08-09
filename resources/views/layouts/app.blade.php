@@ -17,29 +17,30 @@
         <script>
             (function () {
                 const stored = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const theme = stored || (prefersDark ? 'dark' : 'light');
+                const theme = stored || 'dark';
                 document.documentElement.classList.toggle('dark', theme === 'dark');
             })();
         </script>
     </head>
     <body class="font-sans antialiased" x-data>
-        <div class="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+        <div class="min-h-screen dark:bg-neutral-950 dark:text-neutral-200">
             @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
-                    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <div class="lg:pl-64">
+                <!-- Page Heading -->
+                @isset($header)
+                    <header class="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-neutral-950/50">
+                        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                <!-- Page Content -->
+                <main>
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
     </body>
 </html>

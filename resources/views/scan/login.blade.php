@@ -7,10 +7,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans text-neutral-800 antialiased">
-    <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-secondary-950 via-secondary-900 to-primary-950 px-4 py-8">
-        <div class="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_15%_20%,white,transparent_38%),radial-gradient(circle_at_85%_0%,white,transparent_32%)]"></div>
+    <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-950 via-neutral-900 to-primary-950 px-4 py-8">
+        <div class="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_15%_20%,rgb(139,111,247),transparent_40%),radial-gradient(circle_at_85%_0%,rgb(21,188,224),transparent_36%)]"></div>
 
-        <div class="relative w-full max-w-sm rounded-card bg-white p-6 shadow-lift dark:bg-neutral-900">
+        <div class="relative w-full max-w-sm rounded-card bg-white p-6 shadow-lift dark:border dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-black/40">
             <div class="mb-4 flex items-center gap-2.5">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800">
                     <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">

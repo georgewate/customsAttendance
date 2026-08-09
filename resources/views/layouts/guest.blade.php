@@ -17,8 +17,7 @@
         <script>
             (function () {
                 const stored = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const theme = stored || (prefersDark ? 'dark' : 'light');
+                const theme = stored || 'dark';
                 document.documentElement.classList.toggle('dark', theme === 'dark');
             })();
         </script>
@@ -34,8 +33,8 @@
                 </svg>
             </button>
         </div>
-        <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-secondary-950 via-secondary-900 to-primary-950 px-4 py-10 sm:py-12">
-            <div class="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle_at_15%_20%,white,transparent_38%),radial-gradient(circle_at_85%_0%,white,transparent_32%)]"></div>
+        <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-950 via-neutral-900 to-primary-950 px-4 py-10 sm:py-12">
+            <div class="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_15%_20%,rgb(139,111,247),transparent_40%),radial-gradient(circle_at_85%_0%,rgb(21,188,224),transparent_36%)]"></div>
 
             <div class="relative flex items-center gap-3">
                 <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
@@ -46,7 +45,7 @@
                 <span class="text-xl font-semibold tracking-tight text-white">Smart Attendance</span>
             </div>
 
-            <div class="relative mt-6 w-full max-w-md animate-fade-in-up rounded-card border border-neutral-200/50 bg-white p-6 shadow-lift dark:border-neutral-800 dark:bg-neutral-900 sm:p-8">
+            <div class="relative mt-6 w-full max-w-md animate-fade-in-up rounded-card border border-neutral-200/50 bg-white p-6 shadow-lift dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-black/40 sm:p-8">
                 {{ $slot }}
             </div>
         </div>

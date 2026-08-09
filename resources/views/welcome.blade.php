@@ -17,8 +17,7 @@
     <script>
         (function () {
             const stored = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = stored || (prefersDark ? 'dark' : 'light');
+            const theme = stored || 'dark';
             document.documentElement.classList.toggle('dark', theme === 'dark');
         })();
     </script>
@@ -31,10 +30,10 @@
             openLocation(token, name) { this.token = token; this.name = name; this.open = true; },
             close() { this.open = false; }
         }"
-        class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-100 dark:from-secondary-950 dark:via-secondary-900 dark:to-primary-950">
-        <div class="pointer-events-none absolute inset-0 opacity-[0.08] [background-image:radial-gradient(circle_at_15%_20%,white,transparent_38%),radial-gradient(circle_at_85%_0%,white,transparent_32%)]"></div>
+        class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-primary-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-primary-950">
+        <div class="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_15%_20%,rgb(139,111,247),transparent_38%),radial-gradient(circle_at_85%_0%,rgb(21,188,224),transparent_32%)]"></div>
 
-        <nav class="sticky top-0 z-20 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-secondary-950/40">
+        <nav class="sticky top-0 z-20 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/50">
             <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <a href="{{ url('/') }}" class="flex items-center gap-2.5 focus:outline-none">
                     <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
@@ -83,7 +82,7 @@
                         @foreach ($locations as $location)
                             <button type="button"
                                 @click="openLocation(@js($location->qr_token), @js($location->name))"
-                                class="group flex w-full max-w-xs flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 text-center shadow-card backdrop-blur-sm transition-all duration-200 hover:border-primary-300 hover:shadow-soft focus:outline-none dark:border-white/15 dark:bg-white/10 dark:text-white dark:shadow-none dark:hover:border-primary-300/50 dark:hover:bg-white/20 sm:w-64">
+                                class="group flex w-full max-w-xs flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 text-center shadow-card backdrop-blur-sm transition-all duration-200 hover:border-primary-300 hover:shadow-soft focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:shadow-none dark:hover:border-primary-400/50 dark:hover:bg-white/10 sm:w-64">
                                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-800 shadow-card transition-transform duration-200 group-hover:scale-105">
                                     <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -93,7 +92,7 @@
                                 @if ($location->address)
                                     <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-300/80">{{ $location->address }}</p>
                                 @endif
-                                <span class="location-qr mt-3 rounded-xl border border-neutral-200 bg-white p-2 shadow-inner dark:border-neutral-600">
+                                <span class="location-qr mt-3 rounded-xl border border-neutral-200 bg-white p-2 shadow-inner dark:border-white/15">
                                     {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)->generate($location->scanUrl()) !!}
                                 </span>
                                 <span class="mt-2 inline-flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-300/80">
@@ -114,7 +113,7 @@
         <div x-cloak x-show="open" x-transition.opacity
             class="fixed inset-0 z-50 flex items-center justify-center bg-secondary-950/70 p-4 backdrop-blur-sm"
             @click="close()">
-        <div class="w-full max-w-sm rounded-card bg-white p-6 shadow-lift dark:bg-neutral-900" @click.stop>
+        <div class="w-full max-w-sm rounded-card bg-white p-6 shadow-lift dark:border dark:border-white/10 dark:bg-neutral-900/90 dark:shadow-black/40" @click.stop>
             <div class="mb-1 flex items-start justify-between">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800">
