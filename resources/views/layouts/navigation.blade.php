@@ -75,9 +75,15 @@
             <x-dropdown align="bottom" width="56">
                 <x-slot name="trigger">
                     <button class="flex w-full items-center gap-2.5 rounded-control border border-white/10 bg-white/5 px-3 py-2 text-left transition-colors duration-150 hover:bg-white/10 focus:outline-none">
-                        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </span>
+                        @if (Auth::user()->photo_url)
+                            <span class="h-8 w-8 shrink-0 overflow-hidden rounded-full ring-1 ring-white/20">
+                                <img src="{{ Auth::user()->photo_url }}" alt="{{ Auth::user()->name }}" class="h-full w-full object-cover">
+                            </span>
+                        @else
+                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </span>
+                        @endif
                         <span class="min-w-0 flex-1">
                             <span class="block truncate text-sm font-medium text-white">{{ Auth::user()->name }}</span>
                             <span class="block truncate text-xs text-neutral-400">{{ Auth::user()->email }}</span>
@@ -166,8 +172,21 @@
 
         <div class="border-t border-white/10 pt-4 pb-3">
             <div class="px-4">
-                <div class="text-base font-medium text-white">{{ Auth::user()->name }}</div>
-                <div class="text-sm font-medium text-neutral-400">{{ Auth::user()->email }}</div>
+                <div class="flex items-center gap-3">
+                    @if (Auth::user()->photo_url)
+                        <span class="h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-white/20">
+                            <img src="{{ Auth::user()->photo_url }}" alt="{{ Auth::user()->name }}" class="h-full w-full object-cover">
+                        </span>
+                    @else
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        </span>
+                    @endif
+                    <div>
+                        <div class="text-base font-medium text-white">{{ Auth::user()->name }}</div>
+                        <div class="text-sm font-medium text-neutral-400">{{ Auth::user()->email }}</div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">

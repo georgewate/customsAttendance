@@ -23,6 +23,8 @@ class EmployeeFactory extends Factory
             'employee_code' => fake()->unique()->numerify('EMP####'),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'job_title' => fake()->jobTitle(),
+            'department' => fake()->randomElement(['IT', 'Operations', 'Finance', 'HR', 'Sales']),
             'pin_hash' => Hash::make('1234'),
             'home_location_id' => Location::factory(),
             'active' => true,

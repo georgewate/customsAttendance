@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -59,6 +61,73 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_profile_photo_can_be_uploaded(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => $user->email,
+                'photo' => UploadedFile::fake()->image('avatar.jpg'),
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $user->refresh();
+
+        $this->assertNotNull($user->photo);
+        Storage::disk('public')->assertExists($user->photo);
+    }
+
+    public function test_profile_photo_is_replaced_when_updated(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $user->photo = UploadedFile::fake()->image('old.jpg')->store('users', 'public');
+        $user->save();
+
+        $oldPhoto = $user->photo;
+
+        $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => $user->email,
+                'photo' => UploadedFile::fake()->image('new.jpg'),
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $user->refresh();
+
+        $this->assertNotSame($oldPhoto, $user->photo);
+        Storage::disk('public')->assertMissing($oldPhoto);
+        Storage::disk('public')->assertExists($user->photo);
+    }
+
+    public function test_profile_photo_must_be_an_image(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->patch('/profile', [
+                'name' => 'Test User',
+                'email' => $user->email,
+                'photo' => UploadedFile::fake()->create('avatar.txt', 100),
+            ]);
+
+        $response->assertSessionHasErrors('photo');
+        $this->assertNull($user->refresh()->photo);
     }
 
     public function test_user_can_delete_their_account(): void
