@@ -208,7 +208,7 @@ class SettingsController extends Controller
                         'method' => 'POST',
                         'path' => '/admin/employees',
                         'description' => 'Creates an employee.',
-                        'params' => 'Body (form): name, employee_code, pin (min 4, max 8), email, job_title, department, home_location_id, active.',
+                        'params' => 'Body (form): name, employee_code, pin (min 4, max 8), email, home_location_id, active.',
                         'response' => 'Redirect to the employee list.',
                         'auth' => true,
                     ],

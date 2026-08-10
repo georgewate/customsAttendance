@@ -27,41 +27,22 @@
             open: {{ $initOpen }},
             token: {{ $initToken }},
             name: {{ $initName }},
-            menuOpen: false,
             openLocation(token, name) { this.token = token; this.name = name; this.open = true; },
             close() { this.open = false; }
         }"
         class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-primary-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-primary-950">
         <div class="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_15%_20%,rgb(139,111,247),transparent_38%),radial-gradient(circle_at_85%_0%,rgb(21,188,224),transparent_32%)]"></div>
 
-        <nav class="sticky top-0 z-30 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/50">
-            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center gap-2">
-                    <button @click="menuOpen = ! menuOpen" aria-label="Toggle menu" :aria-expanded="menuOpen ? 'true' : 'false'"
-                        class="inline-flex items-center justify-center rounded-md p-2 text-neutral-500 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white lg:hidden">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path :class="{'hidden': menuOpen, 'inline-flex': ! menuOpen }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path :class="{'hidden': ! menuOpen, 'inline-flex': menuOpen }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <nav class="sticky top-0 z-20 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/50">
+            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                <a href="{{ url('/') }}" class="flex items-center gap-2.5 focus:outline-none">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
+                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                    </button>
-
-                    <a href="{{ url('/') }}" class="flex items-center gap-2.5 focus:outline-none">
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
-                            <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </span>
-                        <span class="font-semibold tracking-tight text-neutral-900 dark:text-white">Smart Attendance</span>
-                    </a>
-                </div>
-
-                <div class="hidden items-center gap-1 lg:flex">
-                    <a href="{{ url('/') }}" class="rounded-control px-3 py-2 text-sm font-medium text-neutral-600 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white">Home</a>
-                    <a href="#locations" class="rounded-control px-3 py-2 text-sm font-medium text-neutral-600 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white">Sign in</a>
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="ms-1 rounded-control px-3 py-2 text-sm font-medium text-neutral-600 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white">Dashboard</a>
-                    @endauth
-                </div>
+                    </span>
+                    <span class="font-semibold tracking-tight text-neutral-900 dark:text-white">Smart Attendance</span>
+                </a>
 
                 <div class="flex items-center gap-2">
                     <button @click="toggleTheme()" title="Toggle theme" class="rounded-full p-2 text-neutral-500 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white">
@@ -74,25 +55,13 @@
                     </button>
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="btn-ghost hidden border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 lg:inline-flex">
+                        <a href="{{ route('dashboard') }}" class="btn-ghost border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="btn-ghost hidden border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 lg:inline-flex">
+                        <a href="{{ route('login') }}" class="btn-ghost border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
                             Admin / Manager login
                         </a>
-                    @endauth
-                </div>
-            </div>
-
-            <div x-show="menuOpen" x-cloak x-transition.opacity class="border-t border-neutral-200/70 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/95 lg:hidden">
-                <div class="mx-auto flex max-w-7xl flex-col gap-1">
-                    <a href="{{ url('/') }}" @click="menuOpen = false" class="rounded-control px-3 py-2.5 text-sm font-medium text-neutral-700 transition duration-150 ease-in-out hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-white/10">Home</a>
-                    <a href="#locations" @click="menuOpen = false" class="rounded-control px-3 py-2.5 text-sm font-medium text-neutral-700 transition duration-150 ease-in-out hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-white/10">Sign in</a>
-                    @auth
-                        <a href="{{ route('dashboard') }}" @click="menuOpen = false" class="rounded-control px-3 py-2.5 text-sm font-medium text-neutral-700 transition duration-150 ease-in-out hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-white/10">Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" @click="menuOpen = false" class="rounded-control px-3 py-2.5 text-sm font-medium text-neutral-700 transition duration-150 ease-in-out hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-white/10">Admin / Manager login</a>
                     @endauth
                 </div>
             </div>
@@ -108,7 +77,7 @@
             <p class="mb-7 max-w-sm text-neutral-500 dark:text-neutral-300">Choose your location and sign in with your employee ID and PIN.</p>
 
             @if ($locations->isNotEmpty())
-                <div id="locations" class="mb-7 w-full max-w-3xl">
+                <div class="mb-7 w-full max-w-3xl">
                     <div class="flex flex-wrap justify-center gap-4">
                         @foreach ($locations as $location)
                             <button type="button"
@@ -177,7 +146,7 @@
                 <div>
                     <label for="employee_code" class="label">Employee ID</label>
                     <input id="employee_code" name="employee_code" type="text" value="{{ old('employee_code') }}"
-                        inputmode="text" autocomplete="off" autofocus required
+                        inputmode="numeric" autocomplete="off" autofocus required
                         class="input mt-1.5" />
                 </div>
 

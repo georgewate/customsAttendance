@@ -13,20 +13,6 @@
         <x-input-error :messages="$errors->get('name')" class="mt-2" />
     </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-            <x-input-label for="job_title" value="Job title" />
-            <x-text-input id="job_title" name="job_title" class="mt-1.5 block w-full" value="{{ old('job_title', $employee->job_title ?? '') }}" />
-            <x-input-error :messages="$errors->get('job_title')" class="mt-2" />
-        </div>
-
-        <div>
-            <x-input-label for="department" value="Department" />
-            <x-text-input id="department" name="department" class="mt-1.5 block w-full" value="{{ old('department', $employee->department ?? '') }}" />
-            <x-input-error :messages="$errors->get('department')" class="mt-2" />
-        </div>
-    </div>
-
     <div x-data="{ preview: @js($employee->photo_url ?? null) }">
         <x-input-label for="photo" value="Profile picture" />
         <div class="mt-1.5 flex items-center gap-4">

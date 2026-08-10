@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'photo', 'password', 'role', 'location_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'location_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -38,10 +38,5 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
-    }
-
-    public function getPhotoUrlAttribute(): ?string
-    {
-        return $this->photo ? asset('storage/'.$this->photo) : null;
     }
 }
