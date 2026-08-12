@@ -63,17 +63,17 @@ class ScanController extends Controller
         return redirect()->route('scan.show', $location->qr_token);
     }
 
-    public function timeIn(Location $location)
+    public function timeIn(Request $request, Location $location)
     {
-        return $this->recordScan($location, 'time_in');
+        return $this->recordScan($request, $location, 'time_in');
     }
 
-    public function timeOut(Location $location)
+    public function timeOut(Request $request, Location $location)
     {
-        return $this->recordScan($location, 'time_out');
+        return $this->recordScan($request, $location, 'time_out');
     }
 
-    private function recordScan(Location $location, string $type)
+    private function recordScan(Request $request, Location $location, string $type)
     {
         abort_unless($location->active, 404);
 
@@ -99,6 +99,9 @@ class ScanController extends Controller
 
         $message = $type === 'time_in' ? 'Time in recorded.' : 'Time out recorded.';
 
-        return back()->with('success', $message);
+        Auth::guard('employee')->logout();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', $message);
     }
 }

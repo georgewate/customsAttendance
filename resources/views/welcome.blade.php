@@ -76,6 +76,15 @@
             <h1 class="mb-1 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl">Smart Attendance</h1>
             <p class="mb-7 max-w-sm text-neutral-500 dark:text-neutral-300">Choose your location and sign in with your employee ID and PIN.</p>
 
+            @if (session('success'))
+                <div class="alert alert-success mb-7 w-full max-w-md mx-auto flex items-center gap-2 text-left">
+                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
             @if ($locations->isNotEmpty())
                 <div class="mb-7 w-full max-w-3xl">
                     <div class="flex flex-wrap justify-center gap-4">

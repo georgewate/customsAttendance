@@ -1,7 +1,7 @@
 <nav x-data="{ open: false }">
     {{-- Desktop sidebar --}}
     <aside class="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/10 bg-neutral-950/70 backdrop-blur lg:flex">
-        <div class="flex h-16 shrink-0 items-center px-5">
+        <div class="flex h-16 shrink-0 items-center justify-between px-5">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 focus:outline-none">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 shadow-card">
                     <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -10,6 +10,15 @@
                 </span>
                 <span class="font-semibold tracking-tight text-white">Smart Attendance</span>
             </a>
+
+            <button @click="toggleTheme()" title="Toggle theme" class="inline-flex items-center justify-center rounded-full p-2 text-neutral-300 transition duration-150 ease-in-out hover:bg-white/10 hover:text-white focus:outline-none">
+                <svg class="h-5 w-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+                <svg class="h-5 w-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </button>
         </div>
 
         <div class="mt-2 flex-1 space-y-1 overflow-y-auto px-3 pb-4">
