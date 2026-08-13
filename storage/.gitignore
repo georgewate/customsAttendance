@@ -1,0 +1,13 @@
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/storage/framework/schedules/*
+!/storage/framework/cache/
+!/storage/framework/cache/data/
+!/storage/framework/sessions/
+!/storage/framework/views/
+!/storage/framework/testing/
+!/storage/logs/
