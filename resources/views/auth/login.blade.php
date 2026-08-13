@@ -1,5 +1,12 @@
 <x-guest-layout>
     <div class="mb-6">
+        <a href="{{ url('/') }}" class="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors duration-150 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            {{ __('Back to Home') }}
+        </a>
+
         <h1 class="text-xl font-semibold text-neutral-900 dark:text-white">{{ __('Welcome back') }}</h1>
         <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{{ __('Sign in to continue to the dashboard.') }}</p>
     </div>

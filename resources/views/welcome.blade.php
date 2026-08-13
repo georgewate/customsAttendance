@@ -33,18 +33,18 @@
         class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-white via-neutral-50 to-primary-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-primary-950">
         <div class="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:radial-gradient(circle_at_15%_20%,rgb(139,111,247),transparent_38%),radial-gradient(circle_at_85%_0%,rgb(21,188,224),transparent_32%)]"></div>
 
-        <nav class="sticky top-0 z-20 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/50">
-            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                <a href="{{ url('/') }}" class="flex items-center gap-2.5 focus:outline-none">
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
+        <nav class="fixed inset-x-0 top-0 z-40 border-b border-neutral-200/70 bg-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-neutral-950/50">
+            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                <a href="{{ url('/') }}" class="flex min-w-0 items-center gap-2.5 focus:outline-none">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-800 shadow-card">
                         <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </span>
-                    <span class="font-semibold tracking-tight text-neutral-900 dark:text-white">Smart Attendance</span>
+                    <span class="hidden truncate font-semibold tracking-tight text-neutral-900 min-[420px]:inline dark:text-white">Smart Attendance</span>
                 </a>
 
-                <div class="flex items-center gap-2">
+                <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
                     <button @click="toggleTheme()" title="Toggle theme" class="rounded-full p-2 text-neutral-500 transition duration-150 ease-in-out hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white">
                         <svg class="block h-5 w-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -55,19 +55,20 @@
                     </button>
 
                     @auth
-                        <a href="{{ route('dashboard') }}" class="btn-ghost border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
+                        <a href="{{ route('dashboard') }}" class="btn-ghost whitespace-nowrap border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
                             Dashboard
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="btn-ghost border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
-                            Admin / Manager login
+                        <a href="{{ route('login') }}" class="btn-ghost whitespace-nowrap border border-neutral-300 bg-white px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 sm:px-3 sm:py-2 sm:text-sm dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
+                            <span class="sm:hidden">Login</span>
+                            <span class="hidden sm:inline">Admin / Manager login</span>
                         </a>
                     @endauth
                 </div>
             </div>
         </nav>
 
-        <div class="relative flex w-full flex-1 flex-col items-center justify-center px-4 py-10 text-center">
+        <div class="relative flex w-full flex-1 flex-col items-center justify-center px-4 pt-20 pb-10 text-center">
             <span class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-800 shadow-lift">
                 <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
