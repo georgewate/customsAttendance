@@ -57,15 +57,6 @@
                         Clock In / Out
                     </a>
                 @endif
-                <a href="{{ route('employee.attendance') }}" class="btn btn-secondary">
-                    Attendance History
-                </a>
-                <a href="{{ route('employee.pin') }}" class="btn btn-secondary">
-                    Update PIN
-                </a>
-                <a href="{{ route('employee.profile') }}" class="btn btn-secondary">
-                    Update Profile
-                </a>
             </div>
         </div>
 
