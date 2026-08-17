@@ -41,6 +41,12 @@ class Location extends Model
 
     public function scanUrl(): string
     {
+        $base = config('app.scan_base_url');
+
+        if ($base) {
+            return rtrim($base, '/')."/scan/{$this->qr_token}";
+        }
+
         return url("/scan/{$this->qr_token}");
     }
 }

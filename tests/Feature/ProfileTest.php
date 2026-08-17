@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -95,5 +97,82 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_user_can_upload_a_profile_picture(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->image('avatar.jpg', 100, 100),
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        $this->assertNotNull($user->fresh()->avatar);
+        Storage::disk('public')->assertExists($user->fresh()->avatar);
+    }
+
+    public function test_profile_picture_upload_requires_an_image(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->create('notes.txt', 100),
+            ]);
+
+        $response->assertSessionHasErrors('avatar');
+        $this->assertNull($user->fresh()->avatar);
+    }
+
+    public function test_uploading_a_new_profile_picture_deletes_the_previous_one(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'avatar' => 'avatars/old.jpg',
+        ]);
+
+        Storage::disk('public')->put('avatars/old.jpg', 'old');
+
+        $this
+            ->actingAs($user)
+            ->post('/profile/avatar', [
+                'avatar' => UploadedFile::fake()->image('new.jpg', 100, 100),
+            ])
+            ->assertSessionHasNoErrors();
+
+        Storage::disk('public')->assertMissing('avatars/old.jpg');
+        Storage::disk('public')->assertExists($user->fresh()->avatar);
+    }
+
+    public function test_user_can_remove_their_profile_picture(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'avatar' => 'avatars/pic.jpg',
+        ]);
+
+        Storage::disk('public')->put('avatars/pic.jpg', 'pic');
+
+        $response = $this
+            ->actingAs($user)
+            ->delete('/profile/avatar');
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile');
+
+        Storage::disk('public')->assertMissing('avatars/pic.jpg');
+        $this->assertNull($user->fresh()->avatar);
     }
 }

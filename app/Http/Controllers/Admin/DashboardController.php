@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
+use App\Models\AttendanceSetting;
 use App\Models\Employee;
 use App\Models\Location;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $locationScope = $user->isAdmin() ? null : $user->location_id;
+        $setting = AttendanceSetting::current();
 
         $employeesQuery = Employee::query();
         $logsQuery = AttendanceLog::query();
@@ -68,6 +70,12 @@ class DashboardController extends Controller
             ],
             'trend' => $this->weeklyTrend($logsQuery),
             'locations' => $this->locationStats($logsQuery, $locationScope),
+            'lateArrivalsMonth' => $this->monthlyLateCount($logsQuery, $setting),
+            'earlyClockOutsMonth' => $this->monthlyEarlyCount($logsQuery, $setting),
+            'topLateReasons' => $this->topReasons($logsQuery, 'time_in', 'late_reason_id', 'lateReason'),
+            'topEarlyReasons' => $this->topReasons($logsQuery, 'time_out', 'early_clock_out_reason_id', 'earlyClockOutReason'),
+            'departmentStats' => $this->departmentStats($logsQuery, $activeEmployees),
+            'monthlyTrend' => $this->monthlyTrend($logsQuery),
             'recentLogs' => (clone $logsQuery)
                 ->with(['employee', 'location'])
                 ->latest('scanned_at')
@@ -150,5 +158,89 @@ class DashboardController extends Controller
             'name' => $location->name,
             'present' => $present->get($location->id, 0),
         ])->all();
+    }
+
+    private function monthlyLateCount($logsQuery, AttendanceSetting $setting): int
+    {
+        return (clone $logsQuery)
+            ->where('type', 'time_in')
+            ->whereMonth('scanned_at', now()->month)
+            ->whereYear('scanned_at', now()->year)
+            ->whereRaw('time(scanned_at) > time(?)', [$setting->shift_start_time])
+            ->count();
+    }
+
+    private function monthlyEarlyCount($logsQuery, AttendanceSetting $setting): int
+    {
+        return (clone $logsQuery)
+            ->where('type', 'time_out')
+            ->whereMonth('scanned_at', now()->month)
+            ->whereYear('scanned_at', now()->year)
+            ->whereRaw('time(scanned_at) < time(?)', [$setting->shift_end_time])
+            ->count();
+    }
+
+    private function topReasons($logsQuery, string $type, string $reasonColumn, string $relation): array
+    {
+        return (clone $logsQuery)
+            ->where('type', $type)
+            ->whereMonth('scanned_at', now()->month)
+            ->whereYear('scanned_at', now()->year)
+            ->whereNotNull($reasonColumn)
+            ->with($relation)
+            ->get()
+            ->groupBy($reasonColumn)
+            ->map(fn ($group) => [
+                'name' => $group->first()->{$relation}?->name ?? 'Unknown reason',
+                'count' => $group->count(),
+            ])
+            ->sortByDesc('count')
+            ->take(5)
+            ->values()
+            ->all();
+    }
+
+    private function departmentStats($logsQuery, $activeEmployees): array
+    {
+        $present = (clone $logsQuery)
+            ->whereDate('scanned_at', today())
+            ->where('type', 'time_in')
+            ->get()
+            ->pluck('employee_id')
+            ->unique();
+
+        return $activeEmployees
+            ->groupBy(fn (Employee $employee) => $employee->department ?: 'Unassigned')
+            ->map(function ($group) use ($present) {
+                $ids = $group->pluck('id');
+
+                return [
+                    'department' => $group->first()->department ?: 'Unassigned',
+                    'employees' => $ids->count(),
+                    'present' => $ids->intersect($present)->count(),
+                ];
+            })
+            ->values()
+            ->sortByDesc('present')
+            ->values()
+            ->all();
+    }
+
+    private function monthlyTrend($logsQuery): array
+    {
+        $grouped = (clone $logsQuery)
+            ->where('type', 'time_in')
+            ->where('scanned_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->get()
+            ->groupBy(fn (AttendanceLog $log) => $log->scanned_at->format('Y-m'));
+
+        return collect(range(5, 0))->map(function (int $monthsAgo) use ($grouped) {
+            $month = now()->subMonths($monthsAgo);
+
+            return [
+                'label' => $month->format('M'),
+                'total' => $grouped->get($month->format('Y-m'), collect())->count(),
+            ];
+        })->all();
     }
 }

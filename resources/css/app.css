@@ -310,7 +310,7 @@
     }
 
     /* -----------------------------------------------------------------------
-       Navigation (sidebar)
+       Navigation (top navbar)
        ----------------------------------------------------------------------- */
     .nav-link {
         @apply inline-flex items-center gap-2 rounded-control px-3 py-2 text-sm font-medium transition-colors duration-150 focus:outline-none;
@@ -322,6 +322,10 @@
 
     .nav-link-idle {
         @apply text-neutral-400 hover:bg-white/5 hover:text-white;
+    }
+
+    .admin-content {
+        @apply min-h-screen;
     }
 
     /* -----------------------------------------------------------------------

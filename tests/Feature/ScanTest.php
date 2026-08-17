@@ -6,6 +6,8 @@ use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Models\Location;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ScanTest extends TestCase
@@ -22,6 +24,30 @@ class ScanTest extends TestCase
         $location = Location::factory()->inactive()->create();
 
         $this->get("/scan/{$location->qr_token}")->assertNotFound();
+    }
+
+    public function test_scan_url_uses_configured_public_base_when_set(): void
+    {
+        config(['app.scan_base_url' => 'https://attendance.example.com']);
+
+        $location = $this->location();
+
+        $this->assertSame(
+            "https://attendance.example.com/scan/{$location->qr_token}",
+            $location->scanUrl()
+        );
+    }
+
+    public function test_scan_url_falls_back_to_request_host_without_override(): void
+    {
+        config(['app.scan_base_url' => null]);
+
+        $location = $this->location();
+
+        $this->assertSame(
+            "http://localhost/scan/{$location->qr_token}",
+            $location->scanUrl()
+        );
     }
 
     public function test_scan_page_shows_login_form_for_guest(): void
@@ -85,7 +111,7 @@ class ScanTest extends TestCase
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
         $this->actingAs($employee, 'employee')
-            ->post("/scan/{$location->qr_token}/time-in", [], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->post("/scan/{$location->qr_token}/time-in", ['late_other_reason' => 'Traffic'], ['Referer' => url("/scan/{$location->qr_token}")])
             ->assertRedirect("/scan/{$location->qr_token}")
             ->assertSessionHas('success');
 
@@ -93,6 +119,50 @@ class ScanTest extends TestCase
             'employee_id' => $employee->id,
             'location_id' => $location->id,
             'type' => 'time_in',
+            'is_late' => true,
+            'late_reason_text' => 'Traffic',
+        ]);
+    }
+
+    public function test_time_in_without_reason_is_allowed_when_late(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $this->actingAs($employee, 'employee')
+            ->post("/scan/{$location->qr_token}/time-in", [], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->assertRedirect("/scan/{$location->qr_token}")
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'employee_id' => $employee->id,
+            'type' => 'time_in',
+            'is_late' => true,
+            'late_reason_id' => null,
+            'late_reason_text' => null,
+            'reason_submitted_at' => null,
+        ]);
+    }
+
+    public function test_submitted_reason_is_recorded_as_pending(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+        $reason = \App\Models\AttendanceReason::query()
+            ->where('category', 'late_arrival')
+            ->active()
+            ->firstOrFail();
+
+        $this->actingAs($employee, 'employee')
+            ->post("/scan/{$location->qr_token}/time-in", ['late_reason_id' => $reason->id], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->assertRedirect("/scan/{$location->qr_token}")
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'employee_id' => $employee->id,
+            'type' => 'time_in',
+            'late_reason_id' => $reason->id,
+            'reason_status' => 'pending',
         ]);
     }
 
@@ -134,10 +204,10 @@ class ScanTest extends TestCase
         $location = $this->location();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
-        $this->actingAs($employee, 'employee')->post("/scan/{$location->qr_token}/time-in", [], ['Referer' => url("/scan/{$location->qr_token}")]);
+        $this->actingAs($employee, 'employee')->post("/scan/{$location->qr_token}/time-in", ['late_other_reason' => 'Traffic'], ['Referer' => url("/scan/{$location->qr_token}")]);
 
         $this->actingAs($employee, 'employee')
-            ->post("/scan/{$location->qr_token}/time-out", [], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->post("/scan/{$location->qr_token}/time-out", ['early_other_reason' => 'Appointment'], ['Referer' => url("/scan/{$location->qr_token}")])
             ->assertRedirect("/scan/{$location->qr_token}")
             ->assertSessionHas('success');
 
@@ -145,6 +215,99 @@ class ScanTest extends TestCase
             'employee_id' => $employee->id,
             'type' => 'time_out',
         ]);
+    }
+
+    public function test_scan_show_page_shows_employee_info_and_shift_schedule(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id, 'department' => 'Engineering']);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee($employee->name)
+            ->assertSee('Shift start')
+            ->assertSee('Shift end')
+            ->assertSee('Home location')
+            ->assertSee('Time In')
+            ->assertSee('Not clocked in today');
+    }
+
+    public function test_scan_show_page_shows_empty_history_for_new_employee(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Recent attendance')
+            ->assertSee('No attendance recorded in the last 7 days.');
+    }
+
+    public function test_scan_show_page_shows_employee_photo_next_to_name(): void
+    {
+        Storage::fake('public');
+
+        $location = $this->location();
+        $employee = Employee::factory()->create([
+            'home_location_id' => $location->id,
+            'photo' => 'employees/photo.jpg',
+        ]);
+
+        Storage::disk('public')->put('employees/photo.jpg', 'image');
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee(asset('storage/employees/photo.jpg'), false);
+    }
+
+    public function test_scan_show_page_shows_recent_history_when_logs_exist(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->subDays(2)->setTime(9, 5),
+            'is_late' => true,
+        ]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_out',
+            'scanned_at' => now()->subDays(2)->setTime(17, 2),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Recent attendance')
+            ->assertSee('Late');
+    }
+
+    public function test_scan_show_page_shows_todays_activity_for_clocked_in_employee(): void
+    {
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(9, 5),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Clocked in since')
+            ->assertSee("Today's activity", false)
+            ->assertSee('Time in');
     }
 
     public function test_employee_can_logout_of_scan_session(): void

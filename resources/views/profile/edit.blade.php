@@ -9,6 +9,12 @@
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <div class="card p-6">
                 <div class="max-w-xl">
+                    @include('profile.partials.update-profile-photo-form')
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <div class="max-w-xl">
                     @include('profile.partials.update-profile-information-form')
                 </div>
             </div>

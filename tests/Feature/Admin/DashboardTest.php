@@ -81,7 +81,7 @@ class DashboardTest extends TestCase
 
         $this->actingAs($admin)->get('/dashboard')
             ->assertOk()
-            ->assertSeeHtml('<div class="text-2xl font-bold text-navy-900">2</div>')
-            ->assertSeeHtml('<div class="text-2xl font-bold text-navy-900">1</div>');
+            ->assertSeeHtml('<div class="text-2xl font-bold text-neutral-900 dark:text-white">2</div>')
+            ->assertSeeHtml('<div class="text-2xl font-bold text-neutral-900 dark:text-white">1</div>');
     }
 }

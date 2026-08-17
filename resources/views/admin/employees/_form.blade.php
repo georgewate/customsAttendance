@@ -40,6 +40,12 @@
     </div>
 
     <div>
+        <x-input-label for="department" value="Department (optional)" />
+        <x-text-input id="department" name="department" class="mt-1.5 block w-full" value="{{ old('department', $employee->department ?? '') }}" placeholder="e.g. IT, HR, Sales" />
+        <x-input-error :messages="$errors->get('department')" class="mt-2" />
+    </div>
+
+    <div>
         <x-input-label for="home_location_id" value="Location" />
         <select id="home_location_id" name="home_location_id" class="input mt-1.5" required>
             @foreach ($locations as $location)

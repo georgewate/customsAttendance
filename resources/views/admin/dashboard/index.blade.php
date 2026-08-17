@@ -16,8 +16,18 @@
             'statusData' => [$status['on_clock'], $status['checked_out'], $status['absent']],
             'locationLabels' => array_column($locations, 'name'),
             'locationData' => array_column($locations, 'present'),
+            'lateReasonLabels' => array_column($topLateReasons, 'name'),
+            'lateReasonData' => array_column($topLateReasons, 'count'),
+            'earlyReasonLabels' => array_column($topEarlyReasons, 'name'),
+            'earlyReasonData' => array_column($topEarlyReasons, 'count'),
+            'departmentLabels' => array_column($departmentStats, 'department'),
+            'departmentPresent' => array_column($departmentStats, 'present'),
+            'departmentEmployees' => array_column($departmentStats, 'employees'),
+            'monthLabels' => array_column($monthlyTrend, 'label'),
+            'monthData' => array_column($monthlyTrend, 'total'),
         ];
         $maxPresent = max(array_column($locations, 'present') ?: [0]) ?: 1;
+        $maxDepartment = max(array_column($departmentStats, 'employees') ?: [0]) ?: 1;
     @endphp
 
     <div class="py-10">
@@ -101,6 +111,32 @@
                         <svg class="h-4 w-4 text-neutral-300 transition-colors group-hover:text-primary-500 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
                     </div>
                 </button>
+
+                <button type="button" @click="$dispatch('open-modal', 'card-late')" class="card card-hover group p-5 text-left focus:outline-none">
+                    <div class="flex items-center gap-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-warning-500 to-warning-700 shadow-card">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </span>
+                        <div class="flex-1">
+                            <div class="text-2xl font-bold text-warning-600 dark:text-warning-400">{{ $lateArrivalsMonth }}</div>
+                            <div class="text-xs text-neutral-500 dark:text-neutral-400">Late arrivals (month)</div>
+                        </div>
+                        <svg class="h-4 w-4 text-neutral-300 transition-colors group-hover:text-warning-500 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                </button>
+
+                <button type="button" @click="$dispatch('open-modal', 'card-early')" class="card card-hover group p-5 text-left focus:outline-none">
+                    <div class="flex items-center gap-4">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gradient-to-br from-info-500 to-info-700 shadow-card">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </span>
+                        <div class="flex-1">
+                            <div class="text-2xl font-bold text-info-600 dark:text-info-400">{{ $earlyClockOutsMonth }}</div>
+                            <div class="text-xs text-neutral-500 dark:text-neutral-400">Early clock-outs (month)</div>
+                        </div>
+                        <svg class="h-4 w-4 text-neutral-300 transition-colors group-hover:text-info-500 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                </button>
             </div>
 
             {{-- Charts row 1: trend bar + status doughnut --}}
@@ -153,6 +189,63 @@
                     @endforelse
                     <div class="relative mt-4 h-48">
                         <canvas id="locationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Charts row 3: reasons + department + monthly summary --}}
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="card p-5">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Top late arrival reasons</h3>
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">This month</span>
+                    </div>
+                    <div class="relative h-56">
+                        <canvas id="lateReasonChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-5">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Top early clock-out reasons</h3>
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">This month</span>
+                    </div>
+                    <div class="relative h-56">
+                        <canvas id="earlyReasonChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-5">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Attendance by department</h3>
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Today</span>
+                    </div>
+                    @forelse ($departmentStats as $dept)
+                        <div class="mb-3 last:mb-0">
+                            <div class="flex justify-between text-sm">
+                                <span class="font-medium text-neutral-700 dark:text-neutral-200">{{ $dept['department'] }}</span>
+                                <span class="text-neutral-500 dark:text-neutral-400">{{ $dept['present'] }} / {{ $dept['employees'] }}</span>
+                            </div>
+                            <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                                <div class="h-full rounded-full bg-gradient-to-r from-secondary-500 to-secondary-700"
+                                     style="width: {{ $dept['employees'] ? round($dept['present'] / $dept['employees'] * 100) : 0 }}%"></div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400">No departments yet.</p>
+                    @endforelse
+                    <div class="relative mt-4 h-40">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card p-5">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Monthly attendance summary</h3>
+                        <span class="text-xs text-neutral-500 dark:text-neutral-400">Last 6 months</span>
+                    </div>
+                    <div class="relative h-56">
+                        <canvas id="monthlyChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -364,6 +457,48 @@
         </div>
     </x-modal>
 
+    <x-modal name="card-late" :show="false" maxWidth="2xl" focusable>
+        <div class="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/60">
+            <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Late arrivals this month ({{ $lateArrivalsMonth }})</h3>
+            <button @click="$dispatch('close-modal', 'card-late')" class="rounded p-1 text-neutral-400 transition-colors hover:text-neutral-600 focus:outline-none dark:hover:text-neutral-300">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <ul class="divide-y divide-neutral-100 dark:divide-neutral-800">
+                @forelse ($topLateReasons as $reason)
+                    <li class="flex items-center justify-between py-3">
+                        <span class="text-sm font-medium text-neutral-900 dark:text-white">{{ $reason['name'] }}</span>
+                        <span class="badge badge-warning">{{ $reason['count'] }}</span>
+                    </li>
+                @empty
+                    <li class="py-3 text-sm text-neutral-500 dark:text-neutral-400">No late arrival reasons recorded this month.</li>
+                @endforelse
+            </ul>
+        </div>
+    </x-modal>
+
+    <x-modal name="card-early" :show="false" maxWidth="2xl" focusable>
+        <div class="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/60">
+            <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Early clock-outs this month ({{ $earlyClockOutsMonth }})</h3>
+            <button @click="$dispatch('close-modal', 'card-early')" class="rounded p-1 text-neutral-400 transition-colors hover:text-neutral-600 focus:outline-none dark:hover:text-neutral-300">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <ul class="divide-y divide-neutral-100 dark:divide-neutral-800">
+                @forelse ($topEarlyReasons as $reason)
+                    <li class="flex items-center justify-between py-3">
+                        <span class="text-sm font-medium text-neutral-900 dark:text-white">{{ $reason['name'] }}</span>
+                        <span class="badge badge-info">{{ $reason['count'] }}</span>
+                    </li>
+                @empty
+                    <li class="py-3 text-sm text-neutral-500 dark:text-neutral-400">No early clock-out reasons recorded this month.</li>
+                @endforelse
+            </ul>
+        </div>
+    </x-modal>
+
     <x-modal name="card-logs-today" :show="false" maxWidth="2xl" focusable>
         <div class="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-800 dark:bg-neutral-800/60">
             <h3 class="text-sm font-semibold text-neutral-900 dark:text-white">Logs today ({{ $logsToday }})</h3>
@@ -496,6 +631,104 @@
                         maintainAspectRatio: false,
                         cutout: '62%',
                         plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                    },
+                });
+
+                new Chart(document.getElementById('lateReasonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.lateReasonLabels,
+                        datasets: [{
+                            label: 'Late arrivals',
+                            data: data.lateReasonData,
+                            backgroundColor: '#f59e0b',
+                            hoverBackgroundColor: '#d97706',
+                            borderRadius: 5,
+                            maxBarThickness: 34,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: t.grid }, ticks: { precision: 0 } },
+                            y: { grid: { display: false } },
+                        },
+                    },
+                });
+
+                new Chart(document.getElementById('earlyReasonChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.earlyReasonLabels,
+                        datasets: [{
+                            label: 'Early clock-outs',
+                            data: data.earlyReasonData,
+                            backgroundColor: '#15bce0',
+                            hoverBackgroundColor: '#0b97c2',
+                            borderRadius: 5,
+                            maxBarThickness: 34,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: t.grid }, ticks: { precision: 0 } },
+                            y: { grid: { display: false } },
+                        },
+                    },
+                });
+
+                new Chart(document.getElementById('departmentChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.departmentLabels,
+                        datasets: [
+                            { label: 'Present', data: data.departmentPresent, backgroundColor: '#15bce0', hoverBackgroundColor: '#0b97c2', borderRadius: 5, maxBarThickness: 28 },
+                            { label: 'Employees', data: data.departmentEmployees, backgroundColor: '#99a3b4', hoverBackgroundColor: '#677488', borderRadius: 5, maxBarThickness: 28 },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: t.grid }, ticks: { precision: 0 } },
+                        },
+                    },
+                });
+
+                new Chart(document.getElementById('monthlyChart'), {
+                    type: 'line',
+                    data: {
+                        labels: data.monthLabels,
+                        datasets: [{
+                            label: 'Clock-ins',
+                            data: data.monthData,
+                            borderColor: '#794ef0',
+                            backgroundColor: 'rgba(121, 78, 240, 0.18)',
+                            fill: true,
+                            tension: 0.35,
+                            pointBackgroundColor: '#794ef0',
+                            pointBorderColor: isDark ? '#0f1628' : '#ffffff',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: t.grid }, ticks: { precision: 0 } },
+                        },
                     },
                 });
             }

@@ -22,11 +22,11 @@
             })();
         </script>
     </head>
-    <body class="font-sans antialiased" x-data>
+    <body class="font-sans antialiased">
         <div class="min-h-screen dark:bg-neutral-950 dark:text-neutral-200">
             @include('layouts.navigation')
 
-            <div class="lg:pl-64">
+            <div class="admin-content">
                 <!-- Page Heading -->
                 @isset($header)
                     <header class="border-b border-neutral-200 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-neutral-950/50">

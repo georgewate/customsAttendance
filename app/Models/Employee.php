@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-#[Fillable(['employee_code', 'name', 'email', 'photo', 'pin_hash', 'home_location_id', 'active'])]
+#[Fillable(['employee_code', 'name', 'email', 'photo', 'department', 'pin_hash', 'home_location_id', 'active'])]
 #[Hidden(['pin_hash', 'remember_token'])]
 class Employee extends Authenticatable
 {

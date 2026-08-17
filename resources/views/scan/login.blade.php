@@ -34,7 +34,7 @@
                 <div>
                     <x-input-label for="employee_code" value="Employee code" />
                     <x-text-input id="employee_code" name="employee_code" type="text"
-                        inputmode="numeric" autofocus autocomplete="off"
+                        autofocus autocomplete="off"
                         class="mt-1.5 block w-full text-lg" required />
                 </div>
 

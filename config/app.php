@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Scan Base URL
+    |--------------------------------------------------------------------------
+    |
+    | The base URL embedded in each location's QR code. Set this to a host
+    | reachable from employees' phones (e.g. your LAN IP such as
+    | http://192.168.1.50:8000 or a public tunnel URL). When empty, the
+    | current request host is used, which may be "localhost" and therefore
+    | unusable from a phone scanning the QR code.
+    |
+    */
+
+    'scan_base_url' => env('SCAN_BASE_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
