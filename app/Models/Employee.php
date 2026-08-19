@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 #[Hidden(['pin_hash', 'remember_token'])]
 class Employee extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\EmployeeFactory> */
+    /** @use HasFactory<EmployeeFactory> */
     use HasFactory;
 
     protected function casts(): array
@@ -43,8 +44,11 @@ class Employee extends Authenticatable
 
     public function latestLogToday(?string $timezone = null): ?AttendanceLog
     {
+        $now = now($timezone);
+
         return $this->attendanceLogs()
-            ->whereDate('scanned_at', now($timezone)->toDateString())
+            ->whereDate('scanned_at', $now->toDateString())
+            ->where('scanned_at', '<=', $now)
             ->latest('scanned_at')
             ->first();
     }

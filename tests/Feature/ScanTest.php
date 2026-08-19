@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\AttendanceLog;
+use App\Models\AttendanceReason;
 use App\Models\Employee;
 use App\Models\Location;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -107,6 +108,8 @@ class ScanTest extends TestCase
 
     public function test_time_in_records_an_attendance_log(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 9, 30, 0));
+
         $location = $this->location();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
@@ -126,6 +129,8 @@ class ScanTest extends TestCase
 
     public function test_time_in_without_reason_is_allowed_when_late(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 9, 30, 0));
+
         $location = $this->location();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
@@ -146,9 +151,11 @@ class ScanTest extends TestCase
 
     public function test_submitted_reason_is_recorded_as_pending(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 9, 30, 0));
+
         $location = $this->location();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
-        $reason = \App\Models\AttendanceReason::query()
+        $reason = AttendanceReason::query()
             ->where('category', 'late_arrival')
             ->active()
             ->firstOrFail();
@@ -184,6 +191,38 @@ class ScanTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseCount('attendance_logs', 1);
+    }
+
+    public function test_future_dated_logs_do_not_break_the_time_in_button(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 9, 30, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_out',
+            'scanned_at' => Carbon::create(2026, 8, 19, 17, 0, 0),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->post("/scan/{$location->qr_token}/time-in", [], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->assertRedirect("/scan/{$location->qr_token}")
+            ->assertSessionHas('success');
+
+        $this->actingAs($employee, 'employee')
+            ->post("/scan/{$location->qr_token}/time-in", [], ['Referer' => url("/scan/{$location->qr_token}")])
+            ->assertRedirect("/scan/{$location->qr_token}")
+            ->assertSessionHas('error');
+
+        $this->assertSame(2, AttendanceLog::where('employee_id', $employee->id)->count());
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Clocked in since');
     }
 
     public function test_time_out_without_time_in_is_rejected(): void
@@ -292,6 +331,8 @@ class ScanTest extends TestCase
 
     public function test_scan_show_page_shows_todays_activity_for_clocked_in_employee(): void
     {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 10, 0, 0));
+
         $location = $this->location();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
@@ -308,6 +349,81 @@ class ScanTest extends TestCase
             ->assertSee('Clocked in since')
             ->assertSee("Today's activity", false)
             ->assertSee('Time in');
+    }
+
+    public function test_scan_show_page_shows_reason_locked_after_clock_in(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 10, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(9, 5),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Reason locked')
+            ->assertSee('A reason can no longer be added after clocking in.');
+    }
+
+    public function test_scan_show_page_shows_submitted_reason_when_locked(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 10, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(9, 5),
+            'is_late' => true,
+            'late_reason_text' => 'Traffic',
+            'reason_submitted_at' => now(),
+            'reason_status' => AttendanceLog::REASON_PENDING,
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Reason locked')
+            ->assertSee('Traffic')
+            ->assertSee('Pending');
+    }
+
+    public function test_scan_show_page_shows_reason_locked_after_clock_out(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 18, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(8, 55),
+        ]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_out',
+            'scanned_at' => now()->setTime(17, 5),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Reason locked')
+            ->assertSee('A reason can no longer be added after clocking out.');
     }
 
     public function test_employee_can_logout_of_scan_session(): void

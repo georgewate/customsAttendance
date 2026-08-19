@@ -15,6 +15,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::resource('employees', EmployeeController::class)->except('show');
         Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+        Route::post('attendance/day', [AttendanceController::class, 'updateDay'])->name('attendance.update-day');
         Route::post('attendance/{attendanceLog}/approve-reason', [AttendanceController::class, 'approveReason'])->name('attendance.approve-reason');
         Route::post('attendance/{attendanceLog}/reject-reason', [AttendanceController::class, 'rejectReason'])->name('attendance.reject-reason');
         Route::get('attendance/reports', [ReportController::class, 'index'])->name('attendance.reports');
@@ -26,6 +27,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::middleware('role:admin')->group(function () {
         Route::get('attendance/settings', [AttendanceSettingsController::class, 'index'])->name('attendance.settings');
         Route::post('attendance/settings', [AttendanceSettingsController::class, 'update'])->name('attendance.settings.update');
+        Route::patch('attendance/{attendanceLog}', [AttendanceController::class, 'update'])->name('attendance.update');
         Route::resource('attendance-reasons', AttendanceReasonController::class)->except('show');
         Route::patch('attendance-reasons/{attendanceReason}/toggle', [AttendanceReasonController::class, 'toggle'])->name('attendance-reasons.toggle');
         Route::resource('locations', LocationController::class);

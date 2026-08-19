@@ -36,6 +36,7 @@ class ScanController extends Controller
             'todayLogs' => $employee->attendanceLogs()
                 ->with('location')
                 ->whereDate('scanned_at', today())
+                ->where('scanned_at', '<=', now())
                 ->orderBy('scanned_at')
                 ->get(),
             'history' => $this->historyPreview($employee, $setting),
@@ -59,6 +60,7 @@ class ScanController extends Controller
 
         $logs = $employee->attendanceLogs()
             ->whereDate('scanned_at', '>=', $from)
+            ->where('scanned_at', '<=', now())
             ->orderBy('scanned_at')
             ->get()
             ->groupBy(fn ($log) => $log->scanned_at->toDateString());

@@ -11,6 +11,12 @@
 
         $shiftStart = \Illuminate\Support\Carbon::parse($setting->shift_start_time)->format('g:i A');
         $shiftEnd = \Illuminate\Support\Carbon::parse($setting->shift_end_time)->format('g:i A');
+
+        $todayTimeIn = $todayLogs->where('type', 'time_in')->sortBy('scanned_at')->first();
+        $todayTimeOut = $todayLogs->where('type', 'time_out')->sortByDesc('scanned_at')->first();
+
+        $todayLateReason = $todayTimeIn ? ($todayTimeIn->lateReason?->name ?? $todayTimeIn->late_reason_text) : null;
+        $todayEarlyReason = $todayTimeOut ? ($todayTimeOut->earlyClockOutReason?->name ?? $todayTimeOut->early_clock_out_reason_text) : null;
     @endphp
 
     <div class="mx-auto max-w-xl space-y-5">
@@ -95,6 +101,26 @@
                         </span>
                     </button>
 
+                    @if ($isClockedIn)
+                        <div class="rounded-control border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                            <div class="flex items-start gap-2">
+                                <svg class="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Reason locked</p>
+                                    @if ($todayLateReason)
+                                        <p class="mt-1 text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $todayLateReason }}</p>
+                                        <span class="badge {{ $todayTimeIn->reason_status === 'approved' ? 'badge-success' : ($todayTimeIn->reason_status === 'rejected' ? 'badge-danger' : 'badge-warning') }} mt-1.5">
+                                            {{ $todayTimeIn->reasonStatusLabel() }}
+                                        </span>
+                                    @else
+                                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">A reason can no longer be added after clocking in.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @else
                     <button type="button" @click="showLate = ! showLate"
                         class="flex w-full items-center justify-center gap-2 rounded-control border border-warning-300 bg-warning-50 px-4 py-2 text-sm font-medium text-warning-700 transition-colors duration-150 hover:bg-warning-100 dark:border-warning-700/40 dark:bg-warning-500/10 dark:text-warning-300 dark:hover:bg-warning-500/20">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -102,6 +128,7 @@
                         </svg>
                         <span x-text="showLate ? 'Hide reason' : 'Add reason'"></span>
                     </button>
+                    @endif
 
                     <div x-show="showLate" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
                         <div class="rounded-lg border border-warning-300 bg-warning-50 p-4 dark:border-warning-700/40 dark:bg-warning-500/10" role="group" aria-labelledby="late-reason-title">
@@ -155,13 +182,34 @@
                         </span>
                     </button>
 
-                    <button type="button" @click="showEarly = ! showEarly"
-                        class="flex w-full items-center justify-center gap-2 rounded-control border border-info-300 bg-info-50 px-4 py-2 text-sm font-medium text-info-700 transition-colors duration-150 hover:bg-info-100 dark:border-info-700/40 dark:bg-info-500/10 dark:text-info-300 dark:hover:bg-info-500/20">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span x-text="showEarly ? 'Hide reason' : 'Add reason'"></span>
-                    </button>
+                    @if ($isClockedIn)
+                        <button type="button" @click="showEarly = ! showEarly"
+                            class="flex w-full items-center justify-center gap-2 rounded-control border border-info-300 bg-info-50 px-4 py-2 text-sm font-medium text-info-700 transition-colors duration-150 hover:bg-info-100 dark:border-info-700/40 dark:bg-info-500/10 dark:text-info-300 dark:hover:bg-info-500/20">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span x-text="showEarly ? 'Hide reason' : 'Add reason'"></span>
+                        </button>
+                    @elseif ($hasCheckedOut)
+                        <div class="rounded-control border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                            <div class="flex items-start gap-2">
+                                <svg class="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">Reason locked</p>
+                                    @if ($todayEarlyReason)
+                                        <p class="mt-1 text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $todayEarlyReason }}</p>
+                                        <span class="badge {{ $todayTimeOut->reason_status === 'approved' ? 'badge-success' : ($todayTimeOut->reason_status === 'rejected' ? 'badge-danger' : 'badge-warning') }} mt-1.5">
+                                            {{ $todayTimeOut->reasonStatusLabel() }}
+                                        </span>
+                                    @else
+                                        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">A reason can no longer be added after clocking out.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     <div x-show="showEarly" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
                         <div class="rounded-lg border border-info-300 bg-info-50 p-4 dark:border-info-700/40 dark:bg-info-500/10" role="group" aria-labelledby="early-reason-title">
