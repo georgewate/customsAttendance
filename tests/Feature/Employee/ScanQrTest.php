@@ -61,6 +61,8 @@ class ScanQrTest extends TestCase
 
     public function test_scan_qr_toggles_to_clock_out_when_already_clocked_in(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 12:00:00'));
+
         $location = Location::factory()->create();
         $employee = Employee::factory()->create(['home_location_id' => $location->id]);
 
@@ -82,6 +84,8 @@ class ScanQrTest extends TestCase
             'location_id' => $location->id,
             'type' => 'time_out',
         ]);
+
+        Carbon::setTestNow();
     }
 
     public function test_scan_page_shows_scan_qr_button_and_dashboard_does_not(): void

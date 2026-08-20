@@ -83,6 +83,8 @@ class AttendanceFilterTest extends TestCase
 
     public function test_filter_on_clock_shows_only_employees_still_clocked_in(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 12:00:00'));
+
         $location = Location::factory()->create();
         $onClock = Employee::factory()->create(['home_location_id' => $location->id]);
         $clockedOut = Employee::factory()->create(['home_location_id' => $location->id]);
@@ -113,6 +115,8 @@ class AttendanceFilterTest extends TestCase
             ->assertOk()
             ->assertSee($onClock->name)
             ->assertDontSee($clockedOut->name);
+
+        Carbon::setTestNow();
     }
 
     public function test_employee_index_filters_to_active_employees(): void

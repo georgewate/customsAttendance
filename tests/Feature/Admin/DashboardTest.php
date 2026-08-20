@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\Location;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -95,6 +96,8 @@ class DashboardTest extends TestCase
 
     public function test_dashboard_counts_employees_checked_in_today(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 12:00:00'));
+
         $admin = User::factory()->create(['role' => 'admin']);
         $location = Location::factory()->create();
 
@@ -110,5 +113,7 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSeeHtml('<div class="text-2xl font-bold text-neutral-900 dark:text-white">2</div>')
             ->assertSeeHtml('<div class="text-2xl font-bold text-neutral-900 dark:text-white">1</div>');
+
+        Carbon::setTestNow();
     }
 }
