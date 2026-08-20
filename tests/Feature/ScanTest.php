@@ -27,6 +27,16 @@ class ScanTest extends TestCase
         $this->get("/scan/{$location->qr_token}")->assertNotFound();
     }
 
+    public function test_scan_login_page_shows_scan_qr_button(): void
+    {
+        $location = Location::factory()->create();
+
+        $this->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Scan QR Code')
+            ->assertSee('/employee/scan-qr');
+    }
+
     public function test_scan_url_uses_configured_public_base_when_set(): void
     {
         config(['app.scan_base_url' => 'https://attendance.example.com']);

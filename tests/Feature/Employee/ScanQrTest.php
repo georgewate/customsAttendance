@@ -13,11 +13,122 @@ class ScanQrTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_from_scan_qr(): void
+    public function test_guest_without_credentials_is_prompted_to_sign_in(): void
     {
         $location = Location::factory()->create();
 
-        $this->postJson('/employee/scan-qr', ['token' => $location->qr_token])->assertRedirect('/');
+        $this->postJson('/employee/scan-qr', ['token' => $location->qr_token])
+            ->assertStatus(401)
+            ->assertJson(['status' => 'need_auth']);
+    }
+
+    public function test_guest_can_clock_in_with_employee_code_and_pin(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 09:30:00'));
+
+        $location = Location::factory()->create();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $response = $this->postJson('/employee/scan-qr', [
+            'token' => $location->qr_token,
+            'employee_code' => $employee->employee_code,
+            'pin' => '1234',
+        ]);
+
+        $response->assertOk()
+            ->assertJson(['status' => 'ok', 'action' => 'clock_in']);
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+        ]);
+
+        $this->assertAuthenticatedAs($employee, 'employee');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_guest_with_invalid_pin_is_rejected(): void
+    {
+        $location = Location::factory()->create();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $this->postJson('/employee/scan-qr', [
+            'token' => $location->qr_token,
+            'employee_code' => $employee->employee_code,
+            'pin' => '9999',
+        ])
+            ->assertStatus(422)
+            ->assertJson(['status' => 'error', 'message' => 'Invalid employee code or PIN.']);
+
+        $this->assertSame(0, AttendanceLog::where('employee_id', $employee->id)->count());
+        $this->assertGuest('employee');
+    }
+
+    public function test_guest_can_clock_out_when_already_clocked_in(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 16:00:00'));
+
+        $location = Location::factory()->create();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(8, 55),
+        ]);
+
+        $response = $this->postJson('/employee/scan-qr', [
+            'token' => $location->qr_token,
+            'employee_code' => $employee->employee_code,
+            'pin' => '1234',
+        ]);
+
+        $response->assertOk()
+            ->assertJson(['status' => 'ok', 'action' => 'clock_out']);
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'employee_id' => $employee->id,
+            'type' => 'time_out',
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_guest_already_clocked_out_today_is_rejected(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-20 18:00:00'));
+
+        $location = Location::factory()->create();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(8, 55),
+        ]);
+        AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_out',
+            'scanned_at' => now()->setTime(17, 0),
+        ]);
+
+        $this->postJson('/employee/scan-qr', [
+            'token' => $location->qr_token,
+            'employee_code' => $employee->employee_code,
+            'pin' => '1234',
+        ])
+            ->assertStatus(422)
+            ->assertJson([
+                'status' => 'error',
+                'message' => "You've already clocked out today.",
+            ]);
+
+        Carbon::setTestNow();
     }
 
     public function test_invalid_token_returns_error(): void

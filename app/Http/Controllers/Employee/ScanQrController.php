@@ -14,20 +14,37 @@ class ScanQrController extends Controller
 {
     public function toggle(Request $request): JsonResponse
     {
-        $employee = Auth::guard('employee')->user();
-
-        if (! $employee) {
-            return response()->json(['status' => 'error', 'message' => 'Your session has expired. Please sign in again.'], 403);
-        }
-
         $data = $request->validate([
             'token' => ['required', 'string', 'max:64'],
+            'employee_code' => ['sometimes', 'required', 'string'],
+            'pin' => ['sometimes', 'required', 'string'],
         ]);
 
         $location = Location::query()->where('qr_token', $data['token'])->first();
 
         if (! $location?->active) {
             return response()->json(['status' => 'error', 'message' => 'This QR code is not valid or has been deactivated.'], 404);
+        }
+
+        $employee = Auth::guard('employee')->user();
+
+        if (! $employee) {
+            if (empty($data['employee_code']) || empty($data['pin'])) {
+                return response()->json(['status' => 'need_auth', 'message' => 'Sign in to clock in or out.'], 401);
+            }
+
+            $ok = Auth::guard('employee')->attempt([
+                'employee_code' => $data['employee_code'],
+                'password' => $data['pin'],
+                'active' => true,
+            ]);
+
+            if (! $ok) {
+                return response()->json(['status' => 'error', 'message' => 'Invalid employee code or PIN.'], 422);
+            }
+
+            $employee = Auth::guard('employee')->user();
+            $request->session()->regenerate();
         }
 
         if ($employee->clockedOutToday()) {

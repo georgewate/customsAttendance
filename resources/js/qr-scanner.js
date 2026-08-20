@@ -2,6 +2,8 @@ const SCAN_URL_PATTERN = /\/scan\/([A-Za-z0-9]+)/i;
 
 let overlay = null;
 let scanner = null;
+let awaitingIdentity = false;
+let pendingToken = null;
 
 function tokenFromText(text) {
     const trimmed = (text || '').trim();
@@ -16,6 +18,8 @@ function tokenFromText(text) {
 }
 
 function close() {
+    awaitingIdentity = false;
+    pendingToken = null;
     if (scanner) {
         try {
             scanner.stop()
@@ -44,7 +48,7 @@ function setMessage(element, type, message) {
     }
 }
 
-async function submitScan(token, button) {
+async function submitScan(token, button, credentials = {}) {
     const scanUrl = button.dataset.scanUrl;
     const csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
@@ -55,7 +59,7 @@ async function submitScan(token, button) {
             'Accept': 'application/json',
             'X-CSRF-TOKEN': csrf,
         },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, ...credentials }),
     });
 
     return response.json();
@@ -77,6 +81,18 @@ async function startScan(button) {
                 </button>
             </div>
             <div data-qr-scanner-message class="hidden mb-3 rounded-lg px-4 py-3 text-sm"></div>
+            <form data-qr-scanner-auth class="hidden mb-3 space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-white/10 dark:bg-white/5">
+                <p class="text-sm font-semibold text-neutral-900 dark:text-white">Sign in to clock in or out</p>
+                <div>
+                    <label for="qr-employee-code" class="label mb-1">Employee code</label>
+                    <input id="qr-employee-code" name="employee_code" type="text" autocomplete="off" class="input mt-1.5" required>
+                </div>
+                <div>
+                    <label for="qr-employee-pin" class="label mb-1">PIN</label>
+                    <input id="qr-employee-pin" name="pin" type="password" inputmode="numeric" autocomplete="off" class="input mt-1.5" required>
+                </div>
+                <button type="submit" class="btn-primary w-full">Sign in &amp; clock</button>
+            </form>
             <div id="qr-scanner-region" data-qr-scanner-region class="relative w-full overflow-hidden rounded-lg bg-neutral-900" style="min-height: 220px"></div>
             <p class="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-400">Point your camera at the location's QR poster to clock in or out.</p>
         </div>
@@ -91,6 +107,57 @@ async function startScan(button) {
     });
 
     const message = overlay.querySelector('[data-qr-scanner-message]');
+    const authForm = overlay.querySelector('[data-qr-scanner-auth]');
+    const employeeCodeInput = authForm.querySelector('[name="employee_code"]');
+    const pinInput = authForm.querySelector('[name="pin"]');
+
+    const processToken = async (token, credentials = {}) => {
+        try {
+            const result = await submitScan(token, button, credentials);
+
+            if (result.status === 'need_auth') {
+                pendingToken = token;
+                awaitingIdentity = true;
+                authForm.classList.remove('hidden');
+                employeeCodeInput.focus();
+                return 'need_auth';
+            }
+
+            setMessage(message, result.status === 'ok' ? 'success' : 'error', result.message || 'Something went wrong. Please try again.');
+
+            if (result.status === 'ok') {
+                setTimeout(() => {
+                    close();
+                    window.location.reload();
+                }, 1200);
+            }
+
+            return result.status;
+        } catch (error) {
+            setMessage(message, 'error', 'Could not reach the server. Please try again.');
+        }
+    };
+
+    authForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const employeeCode = employeeCodeInput.value.trim();
+        const pin = pinInput.value;
+        const token = pendingToken;
+
+        if (!employeeCode || !pin || !token) {
+            return;
+        }
+
+        const submitButton = authForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+
+        const outcome = await processToken(token, { employee_code: employeeCode, pin });
+
+        if (outcome !== 'ok') {
+            submitButton.disabled = false;
+        }
+    });
 
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
         setMessage(message, 'error', 'Camera access is only available over HTTPS (or localhost). Open the kiosk over a secure connection and try again.');
@@ -108,17 +175,15 @@ async function startScan(button) {
     scanner = new Html5Qrcode('qr-scanner-region');
 
     const onDecoded = async (decodedText) => {
+        if (awaitingIdentity) {
+            return;
+        }
         const token = tokenFromText(decodedText);
         if (!token) {
             setMessage(message, 'error', 'That is not a valid attendance QR code. Try again.');
             return;
         }
-        try {
-            const result = await submitScan(token, button);
-            setMessage(message, result.status === 'ok' ? 'success' : 'error', result.message || 'Something went wrong. Please try again.');
-        } catch (error) {
-            setMessage(message, 'error', 'Could not reach the server. Please try again.');
-        }
+        await processToken(token);
     };
 
 const cameraConfigs = [

@@ -40,8 +40,11 @@ Route::middleware('employee.auth')->prefix('employee')->name('employee.')->group
     Route::get('/update-profile', [AccountController::class, 'showProfileForm'])->name('profile');
     Route::post('/update-profile', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::post('/logout', [AccountController::class, 'logout'])->name('logout');
-    Route::post('/scan-qr', [ScanQrController::class, 'toggle'])->name('scan-qr')->middleware('throttle:30,1');
 });
+
+Route::post('/employee/scan-qr', [ScanQrController::class, 'toggle'])
+    ->name('employee.scan-qr')
+    ->middleware('throttle:30,1');
 
 Route::prefix('scan/{location:qr_token}')->name('scan.')->group(function () {
     Route::get('/', [ScanController::class, 'show'])->name('show');
