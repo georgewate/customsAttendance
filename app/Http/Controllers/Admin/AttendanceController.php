@@ -181,14 +181,12 @@ class AttendanceController extends Controller
         $earlyReasonId = $type === 'time_out' ? ($request->input('time_out_early_reason_id') ?: null) : null;
         $earlyText = $type === 'time_out' ? trim($request->input('time_out_early_other_reason') ?? '') ?: null : null;
 
-        if ($type === 'time_in' && ! $isLate) {
-            $lateReasonId = null;
-            $lateText = null;
+        if ($lateReasonId !== null || $lateText !== null) {
+            $isLate = true;
         }
 
-        if ($type === 'time_out' && ! $isEarly) {
-            $earlyReasonId = null;
-            $earlyText = null;
+        if ($earlyReasonId !== null || $earlyText !== null) {
+            $isEarly = true;
         }
 
         $hasReason = $lateReasonId !== null
@@ -265,14 +263,12 @@ class AttendanceController extends Controller
         $earlyReasonId = $attendanceLog->type === 'time_out' ? $earlyReasonId : $attendanceLog->early_clock_out_reason_id;
         $earlyText = $attendanceLog->type === 'time_out' ? (trim($earlyText ?? '') ?: null) : $attendanceLog->early_clock_out_reason_text;
 
-        if ($attendanceLog->type === 'time_in' && ! $isLate) {
-            $lateReasonId = null;
-            $lateText = null;
+        if ($lateReasonId !== null || $lateText !== null) {
+            $isLate = true;
         }
 
-        if ($attendanceLog->type === 'time_out' && ! $isEarly) {
-            $earlyReasonId = null;
-            $earlyText = null;
+        if ($earlyReasonId !== null || $earlyText !== null) {
+            $isEarly = true;
         }
 
         $hasReason = $lateReasonId !== null
@@ -297,10 +293,10 @@ class AttendanceController extends Controller
             'early_clock_out_reason_id' => $earlyReasonId,
             'early_clock_out_reason_text' => $earlyText,
             'reason_submitted_at' => $hasReason ? now() : null,
-            'reason_status' => $hasReason && $reasonChanged ? AttendanceLog::REASON_APPROVED : $attendanceLog->reason_status,
-            'reason_reviewed_by' => $hasReason && $reasonChanged ? $user->id : $attendanceLog->reason_reviewed_by,
-            'reason_reviewed_at' => $hasReason && $reasonChanged ? now() : $attendanceLog->reason_reviewed_at,
-            'reason_review_note' => $hasReason && $reasonChanged ? null : $attendanceLog->reason_review_note,
+            'reason_status' => ! $hasReason ? null : ($reasonChanged ? AttendanceLog::REASON_APPROVED : $attendanceLog->reason_status),
+            'reason_reviewed_by' => ! $hasReason ? null : ($reasonChanged ? $user->id : $attendanceLog->reason_reviewed_by),
+            'reason_reviewed_at' => ! $hasReason ? null : ($reasonChanged ? now() : $attendanceLog->reason_reviewed_at),
+            'reason_review_note' => ! $hasReason ? null : ($reasonChanged ? null : $attendanceLog->reason_review_note),
         ]);
 
         AuditLog::create([

@@ -368,4 +368,159 @@ class AttendanceLogEditTest extends TestCase
         $response->assertSee('5:30 PM', false);
         $response->assertSee(now()->format('M j, Y'));
     }
+
+    public function test_admin_can_add_late_reason_to_record_not_flagged_late(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employee = Employee::factory()->create();
+        $log = AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $employee->home_location_id,
+            'type' => 'time_in',
+            'scanned_at' => now()->subDays(3)->setTime(8, 30),
+            'is_late' => false,
+        ]);
+        $reason = AttendanceReason::query()
+            ->where('category', 'late_arrival')
+            ->active()
+            ->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.attendance.update', $log), [
+                'scanned_at' => $log->scanned_at->format('Y-m-d H:i:s'),
+                'late_reason_id' => $reason->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'id' => $log->id,
+            'is_late' => true,
+            'late_reason_id' => $reason->id,
+            'reason_status' => AttendanceLog::REASON_APPROVED,
+            'reason_reviewed_by' => $admin->id,
+        ]);
+    }
+
+    public function test_admin_can_add_early_reason_to_record_not_flagged_early(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employee = Employee::factory()->create();
+        $log = AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $employee->home_location_id,
+            'type' => 'time_out',
+            'scanned_at' => now()->subDays(3)->setTime(17, 30),
+            'is_early_clock_out' => false,
+        ]);
+        $reason = AttendanceReason::query()
+            ->where('category', 'early_clock_out')
+            ->active()
+            ->firstOrFail();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.attendance.update', $log), [
+                'scanned_at' => $log->scanned_at->format('Y-m-d H:i:s'),
+                'early_clock_out_reason_id' => $reason->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'id' => $log->id,
+            'is_early_clock_out' => true,
+            'early_clock_out_reason_id' => $reason->id,
+            'reason_status' => AttendanceLog::REASON_APPROVED,
+            'reason_reviewed_by' => $admin->id,
+        ]);
+    }
+
+    public function test_admin_can_add_reasons_to_past_records_via_day_edit(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employee = Employee::factory()->create();
+        $date = now()->subDays(5)->format('Y-m-d');
+        $timeIn = AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $employee->home_location_id,
+            'type' => 'time_in',
+            'scanned_at' => $date.' 08:30:00',
+            'is_late' => false,
+        ]);
+        $timeOut = AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $employee->home_location_id,
+            'type' => 'time_out',
+            'scanned_at' => $date.' 17:30:00',
+            'is_early_clock_out' => false,
+        ]);
+        $lateReason = AttendanceReason::query()
+            ->where('category', 'late_arrival')
+            ->active()
+            ->firstOrFail();
+        $earlyReason = AttendanceReason::query()
+            ->where('category', 'early_clock_out')
+            ->active()
+            ->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('admin.attendance.update-day'), [
+                'employee_id' => $employee->id,
+                'date' => $date,
+                'time_in' => $date.' 08:30:00',
+                'time_in_late_reason_id' => $lateReason->id,
+                'time_out' => $date.' 17:30:00',
+                'time_out_early_reason_id' => $earlyReason->id,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'id' => $timeIn->id,
+            'is_late' => true,
+            'late_reason_id' => $lateReason->id,
+            'reason_status' => AttendanceLog::REASON_APPROVED,
+        ]);
+        $this->assertDatabaseHas('attendance_logs', [
+            'id' => $timeOut->id,
+            'is_early_clock_out' => true,
+            'early_clock_out_reason_id' => $earlyReason->id,
+            'reason_status' => AttendanceLog::REASON_APPROVED,
+        ]);
+    }
+
+    public function test_removing_reason_resets_flag_when_time_not_late(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $employee = Employee::factory()->create();
+        $reason = AttendanceReason::query()
+            ->where('category', 'late_arrival')
+            ->active()
+            ->firstOrFail();
+        $log = AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $employee->home_location_id,
+            'type' => 'time_in',
+            'scanned_at' => now()->subDays(3)->setTime(8, 30),
+            'is_late' => true,
+            'late_reason_id' => $reason->id,
+            'reason_status' => AttendanceLog::REASON_APPROVED,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.attendance.update', $log), [
+                'scanned_at' => $log->scanned_at->format('Y-m-d H:i:s'),
+                'late_reason_id' => '',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendance_logs', [
+            'id' => $log->id,
+            'is_late' => false,
+            'late_reason_id' => null,
+            'late_reason_text' => null,
+            'reason_status' => null,
+        ]);
+    }
 }
