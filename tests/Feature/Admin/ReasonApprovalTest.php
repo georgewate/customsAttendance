@@ -16,7 +16,7 @@ class ReasonApprovalTest extends TestCase
 
     private function pendingLog(): AttendanceLog
     {
-        $employee = Employee::factory()->create();
+        $employee = Employee::factory()->create(['name' => 'Alex Johnson']);
 
         return AttendanceLog::factory()->create([
             'employee_id' => $employee->id,
@@ -143,6 +143,8 @@ class ReasonApprovalTest extends TestCase
         $response->assertSee('Reject');
         $response->assertSee(route('admin.attendance.approve-reason', $log), false);
         $response->assertSee(route('admin.attendance.reject-reason', $log), false);
+        $response->assertSee('Approve '.$log->employee->name.'\u0027s late arrival reason? \u0022Traffic\u0022', false);
+        $response->assertSee('Reject '.$log->employee->name.'\u0027s late arrival reason? \u0022Traffic\u0022', false);
     }
 
     public function test_approved_reason_shows_approved_badge_without_actions(): void

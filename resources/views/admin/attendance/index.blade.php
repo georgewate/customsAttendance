@@ -106,14 +106,15 @@
                                                     <span class="text-xs text-neutral-600 dark:text-neutral-300">{{ $row['time_in']->reasonSummary() }}</span>
                                                     @if ($row['time_in']->reasonIsPending())
                                                         <div class="flex items-center gap-1.5">
-                                                            <form method="POST" action="{{ route('admin.attendance.approve-reason', $row['time_in']) }}" class="inline">
+                                                            <form method="POST" action="{{ route('admin.attendance.approve-reason', $row['time_in']) }}" class="inline"
+                                                                    onsubmit="return confirm({{ Js::from('Approve '.$row['time_in']->employee->name.'\'s late arrival reason? "'.$row['time_in']->reasonSummary().'" — this will mark it as approved.') }});">
                                                                 @csrf
                                                                 <button type="submit" class="rounded-control border border-success-300 bg-success-50 px-2 py-1 text-xs font-medium text-success-700 transition-colors hover:bg-success-100 dark:border-success-700/40 dark:bg-success-500/10 dark:text-success-300 dark:hover:bg-success-500/20">
                                                                     Approve
                                                                 </button>
                                                             </form>
                                                             <form method="POST" action="{{ route('admin.attendance.reject-reason', $row['time_in']) }}" class="inline"
-                                                                onsubmit="return confirm('Reject this reason? This cannot be undone.');">
+                                                                onsubmit="return confirm({{ Js::from('Reject '.$row['time_in']->employee->name.'\'s late arrival reason? "'.$row['time_in']->reasonSummary().'" — this cannot be undone.') }});">
                                                                 @csrf
                                                                 <button type="submit" class="rounded-control border border-danger-300 bg-danger-50 px-2 py-1 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-100 dark:border-danger-700/40 dark:bg-danger-500/10 dark:text-danger-300 dark:hover:bg-danger-500/20">
                                                                     Reject
@@ -157,14 +158,15 @@
                                                     <span class="text-xs text-neutral-600 dark:text-neutral-300">{{ $row['time_out']->reasonSummary() }}</span>
                                                     @if ($row['time_out']->reasonIsPending())
                                                         <div class="flex items-center gap-1.5">
-                                                            <form method="POST" action="{{ route('admin.attendance.approve-reason', $row['time_out']) }}" class="inline">
+                                                            <form method="POST" action="{{ route('admin.attendance.approve-reason', $row['time_out']) }}" class="inline"
+                                                                    onsubmit="return confirm({{ Js::from('Approve '.$row['time_out']->employee->name.'\'s early clock-out reason? "'.$row['time_out']->reasonSummary().'" — this will mark it as approved.') }});">
                                                                 @csrf
                                                                 <button type="submit" class="rounded-control border border-success-300 bg-success-50 px-2 py-1 text-xs font-medium text-success-700 transition-colors hover:bg-success-100 dark:border-success-700/40 dark:bg-success-500/10 dark:text-success-300 dark:hover:bg-success-500/20">
                                                                     Approve
                                                                 </button>
                                                             </form>
                                                             <form method="POST" action="{{ route('admin.attendance.reject-reason', $row['time_out']) }}" class="inline"
-                                                                onsubmit="return confirm('Reject this reason? This cannot be undone.');">
+                                                                onsubmit="return confirm({{ Js::from('Reject '.$row['time_out']->employee->name.'\'s early clock-out reason? "'.$row['time_out']->reasonSummary().'" — this cannot be undone.') }});">
                                                                 @csrf
                                                                 <button type="submit" class="rounded-control border border-danger-300 bg-danger-50 px-2 py-1 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-100 dark:border-danger-700/40 dark:bg-danger-500/10 dark:text-danger-300 dark:hover:bg-danger-500/20">
                                                                     Reject

@@ -426,6 +426,74 @@ class ScanTest extends TestCase
             ->assertSee('A reason can no longer be added after clocking out.');
     }
 
+    public function test_scan_show_page_hides_add_reason_panel_before_shift_start(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 8, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertDontSee('Reason for Late Arrival')
+            ->assertDontSee('Add reason');
+    }
+
+    public function test_scan_show_page_shows_add_reason_panel_when_late(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 9, 30, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Reason for Late Arrival');
+    }
+
+    public function test_scan_show_page_hides_early_reason_panel_after_shift_end(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 18, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(8, 55),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertDontSee('Reason for Early Clock-Out')
+            ->assertDontSee('Add reason');
+    }
+
+    public function test_scan_show_page_shows_early_reason_panel_when_early(): void
+    {
+        Carbon::setTestNow(Carbon::create(2026, 8, 19, 16, 0, 0));
+
+        $location = $this->location();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+            'scanned_at' => now()->setTime(8, 55),
+        ]);
+
+        $this->actingAs($employee, 'employee')
+            ->get("/scan/{$location->qr_token}")
+            ->assertOk()
+            ->assertSee('Reason for Early Clock-Out');
+    }
+
     public function test_time_in_is_rejected_after_clocking_out_same_day(): void
     {
         $location = $this->location();

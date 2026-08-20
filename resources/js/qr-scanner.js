@@ -17,9 +17,13 @@ function tokenFromText(text) {
 
 function close() {
     if (scanner) {
-        scanner.stop()
-            .then(() => scanner.clear())
-            .catch(() => {});
+        try {
+            scanner.stop()
+                .then(() => scanner.clear())
+                .catch(() => {});
+        } catch (error) {
+            // Scanner was never started; there is nothing to stop.
+        }
         scanner = null;
     }
     if (overlay) {
@@ -73,7 +77,7 @@ async function startScan(button) {
                 </button>
             </div>
             <div data-qr-scanner-message class="hidden mb-3 rounded-lg px-4 py-3 text-sm"></div>
-            <div id="qr-scanner-region" data-qr-scanner-region></div>
+            <div id="qr-scanner-region" data-qr-scanner-region class="relative w-full overflow-hidden rounded-lg bg-neutral-900" style="min-height: 220px"></div>
             <p class="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-400">Point your camera at the location's QR poster to clock in or out.</p>
         </div>
     `;
@@ -87,30 +91,61 @@ async function startScan(button) {
     });
 
     const message = overlay.querySelector('[data-qr-scanner-message]');
-    const { Html5Qrcode } = await import('html5-qrcode');
+
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        setMessage(message, 'error', 'Camera access is only available over HTTPS (or localhost). Open the kiosk over a secure connection and try again.');
+        return;
+    }
+
+    let Html5Qrcode;
+    try {
+        ({ Html5Qrcode } = await import('html5-qrcode'));
+    } catch (error) {
+        setMessage(message, 'error', 'The QR scanner could not be loaded. Please refresh the page and try again.');
+        return;
+    }
+
     scanner = new Html5Qrcode('qr-scanner-region');
 
-    try {
-        await scanner.start(
-            { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 220, height: 220 } },
-            async (decodedText) => {
-                const token = tokenFromText(decodedText);
-                if (!token) {
-                    setMessage(message, 'error', 'That is not a valid attendance QR code. Try again.');
-                    return;
-                }
-                try {
-                    const result = await submitScan(token, button);
-                    setMessage(message, result.status === 'ok' ? 'success' : 'error', result.message || 'Something went wrong. Please try again.');
-                } catch (error) {
-                    setMessage(message, 'error', 'Could not reach the server. Please try again.');
-                }
-            },
-            () => {},
-        );
-    } catch (error) {
-        setMessage(message, 'error', 'Camera is not available or permission was denied. Please allow camera access and try again.');
+    const onDecoded = async (decodedText) => {
+        const token = tokenFromText(decodedText);
+        if (!token) {
+            setMessage(message, 'error', 'That is not a valid attendance QR code. Try again.');
+            return;
+        }
+        try {
+            const result = await submitScan(token, button);
+            setMessage(message, result.status === 'ok' ? 'success' : 'error', result.message || 'Something went wrong. Please try again.');
+        } catch (error) {
+            setMessage(message, 'error', 'Could not reach the server. Please try again.');
+        }
+    };
+
+const cameraConfigs = [
+    { facingMode: 'environment' },
+    { facingMode: { exact: 'environment' } },
+    { facingMode: 'user' },
+    { facingMode: { exact: 'user' } },
+];
+
+    let started = false;
+    for (const camera of cameraConfigs) {
+        try {
+            await scanner.start(
+                camera,
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                onDecoded,
+                () => {},
+            );
+            started = true;
+            break;
+        } catch (error) {
+            // Fall through to the next camera configuration.
+        }
+    }
+
+    if (!started) {
+        setMessage(message, 'error', 'Camera is not available or permission was denied. Allow camera access and try again.');
     }
 }
 

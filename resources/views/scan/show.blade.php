@@ -123,7 +123,7 @@
                                 </div>
                             </div>
                         </div>
-                    @else
+                    @elseif ($isLateNow)
                     <button type="button" @click="showLate = ! showLate"
                         class="flex w-full items-center justify-center gap-2 rounded-control border border-warning-300 bg-warning-50 px-4 py-2 text-sm font-medium text-warning-700 transition-colors duration-150 hover:bg-warning-100 dark:border-warning-700/40 dark:bg-warning-500/10 dark:text-warning-300 dark:hover:bg-warning-500/20">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -133,6 +133,7 @@
                     </button>
                     @endif
 
+                    @if ($isLateNow)
                     <div x-show="showLate" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
                         <div class="rounded-lg border border-warning-300 bg-warning-50 p-4 dark:border-warning-700/40 dark:bg-warning-500/10" role="group" aria-labelledby="late-reason-title">
                             <div class="flex items-start gap-2">
@@ -164,6 +165,7 @@
                             <x-input-error :messages="$errors->get('late_other_reason')" class="mt-2" />
                         </div>
                     </div>
+                    @endif
                 </form>
 
                 {{-- Time Out --}}
@@ -185,7 +187,7 @@
                         </span>
                     </button>
 
-                    @if ($isClockedIn)
+                    @if ($isClockedIn && $isEarlyNow)
                         <button type="button" @click="showEarly = ! showEarly"
                             class="flex w-full items-center justify-center gap-2 rounded-control border border-info-300 bg-info-50 px-4 py-2 text-sm font-medium text-info-700 transition-colors duration-150 hover:bg-info-100 dark:border-info-700/40 dark:bg-info-500/10 dark:text-info-300 dark:hover:bg-info-500/20">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -214,6 +216,7 @@
                         </div>
                     @endif
 
+                    @if ($isEarlyNow)
                     <div x-show="showEarly" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1">
                         <div class="rounded-lg border border-info-300 bg-info-50 p-4 dark:border-info-700/40 dark:bg-info-500/10" role="group" aria-labelledby="early-reason-title">
                             <div class="flex items-start gap-2">
@@ -245,6 +248,7 @@
                             <x-input-error :messages="$errors->get('early_other_reason')" class="mt-2" />
                         </div>
                     </div>
+                    @endif
                 </form>
             </div>
 

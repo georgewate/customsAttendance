@@ -38,14 +38,12 @@ class DemoEmployeesSeeder extends Seeder
         $employees = [];
 
         foreach (self::NAMES as $i => $name) {
-            $pin = str_pad((string) (1000 + $i), 4, '0', STR_PAD_LEFT);
-
             $employee = Employee::create([
                 'employee_code' => 'EMP-'.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT),
                 'name' => $name,
                 'email' => strtolower(str_replace(' ', '.', $name)).'@attendance.local',
                 'department' => self::DEPARTMENTS[$i % count(self::DEPARTMENTS)],
-                'pin_hash' => Hash::make($pin),
+                'pin_hash' => Hash::make('1234'),
                 'home_location_id' => $locations->random()->id,
                 'active' => true,
             ]);
@@ -54,7 +52,7 @@ class DemoEmployeesSeeder extends Seeder
         }
 
         $this->command->info('Created '.count($employees).' employees.');
-        $this->command->info('PINs are 1000-1019. Sample: EMP-001 / 1000');
+        $this->command->info('All employee PINs are 1234. Sample: EMP-001 / 1234');
 
         $days = $this->lastWorkingDays(14);
 

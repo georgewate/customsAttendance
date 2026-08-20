@@ -216,6 +216,15 @@
         @apply block w-full rounded-control border-neutral-300 bg-white text-neutral-900 shadow-sm transition-colors placeholder:text-neutral-400 focus:border-primary-500 focus:ring-primary-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:opacity-60 dark:border-white/15 dark:bg-white/5 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:disabled:bg-neutral-800;
     }
 
+    select.input {
+        @apply bg-neutral-800 text-neutral-100 placeholder:text-neutral-400;
+        color-scheme: dark;
+    }
+
+    select.input option {
+        @apply bg-neutral-800 text-neutral-100;
+    }
+
     .label {
         @apply block text-sm font-medium text-neutral-700 dark:text-neutral-300;
     }
