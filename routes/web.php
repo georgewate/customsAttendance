@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Employee\AccountController;
 use App\Http\Controllers\Employee\AttendanceController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Employee\ScanQrController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScanController;
 use App\Models\Location;
@@ -39,6 +40,7 @@ Route::middleware('employee.auth')->prefix('employee')->name('employee.')->group
     Route::get('/update-profile', [AccountController::class, 'showProfileForm'])->name('profile');
     Route::post('/update-profile', [AccountController::class, 'updateProfile'])->name('profile.update');
     Route::post('/logout', [AccountController::class, 'logout'])->name('logout');
+    Route::post('/scan-qr', [ScanQrController::class, 'toggle'])->name('scan-qr')->middleware('throttle:30,1');
 });
 
 Route::prefix('scan/{location:qr_token}')->name('scan.')->group(function () {

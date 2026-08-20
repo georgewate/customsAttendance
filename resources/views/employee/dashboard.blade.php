@@ -50,7 +50,7 @@
 
             <div class="mt-6 flex flex-wrap items-center gap-3">
                 @if ($employee->homeLocation)
-                    <a href="{{ route('scan.show', $employee->homeLocation->qr_token) }}" class="btn btn-primary">
+                    <a href="{{ route('scan.show', $employee->homeLocation->qr_token) }}" class="btn btn-ghost">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>

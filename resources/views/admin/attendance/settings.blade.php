@@ -66,6 +66,20 @@
                         </div>
                     </div>
 
+                    <div class="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+                        <h4 class="text-sm font-semibold text-neutral-900 dark:text-white">QR code auto-renewal</h4>
+                        <p class="mt-1 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+                            When enabled, every location's QR code is automatically regenerated once a day so old codes stop working.
+                            Existing scan links and printed posters become invalid after each renewal.
+                        </p>
+                        <label class="mt-3 flex cursor-pointer items-center gap-3">
+                            <input id="auto_renew_qr_enabled" name="auto_renew_qr_enabled" type="checkbox" value="1"
+                                class="checkbox"
+                                {{ old('auto_renew_qr_enabled', $setting->auto_renew_qr_enabled) ? 'checked' : '' }}>
+                            <span class="text-sm text-neutral-600 dark:text-neutral-300">Automatically renew QR codes daily</span>
+                        </label>
+                    </div>
+
                     <div class="rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800">
                         @php
                             $autoTime = $setting->autoClockOutCarbon();

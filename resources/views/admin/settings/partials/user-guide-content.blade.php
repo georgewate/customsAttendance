@@ -49,8 +49,10 @@
         <li><strong>Charts</strong> &mdash; time-in vs time-out volumes, the weekly activity trend, and the status/location breakdown.</li>
         <li><strong>Recent activity</strong> &mdash; the latest scans across the organisation.</li>
     </ul>
-    <p>Click any KPI card to open a detail modal listing the matching employees or records. Click
-    <strong>Today&rsquo;s Logs</strong> to review the raw scan entries.</p>
+    <p>Each KPI card is a <strong>link</strong>. Click a card to jump straight to the matching records &mdash; for
+    example <strong>Late today</strong> opens the attendance log filtered to late arrivals, <strong>On the clock</strong>
+    shows employees currently clocked in, and <strong>Checked in today</strong> shows today&rsquo;s scan entries. The
+    dashboard links behave the same for admins and managers, scoped to the location the user manages.</p>
 
     <h2>4. Attendance log</h2>
     <p>The <strong>Attendance</strong> page lists every recorded scan. Use the filters to narrow the list:</p>
@@ -94,6 +96,9 @@
     </ol>
     <p>If a printed code is lost or compromised, use <strong>Regenerate Token</strong> to issue a new QR code;
     the old code immediately stops working.</p>
+    <p>You can also have QR codes renew themselves automatically. On the <strong>Attendance Settings</strong> page
+    (admin), tick <strong>Automatically renew QR codes daily</strong>. When enabled, every active location&rsquo;s QR
+    code is regenerated once a day so old codes stop working; print and display the new posters each day.</p>
 
     <h2>8. Managing user accounts (admins)</h2>
     <p>Under <strong>Users</strong> (admins only), create accounts for admins and managers. For each account
@@ -105,8 +110,13 @@
     <ol>
         <li>Enter their <strong>employee code</strong> and <strong>PIN</strong> and tap <strong>Sign in</strong>.</li>
         <li>Tap <strong>Time In</strong> when they arrive and <strong>Time Out</strong> when they leave.</li>
-        <li>Multiple time-in/time-out pairs per day are allowed; the system stores each scan.</li>
     </ol>
+    <p>Each employee may clock in <strong>once</strong> and clock out <strong>once</strong> per day. A second
+    time-in or time-out on the same day is rejected, so the buttons become disabled once the employee has clocked in
+    (and again after clocking out).</p>
+    <p>Employees on a phone can also clock in and out by <strong>scanning the location&rsquo;s QR poster with the
+    camera</strong>. On the clock-in/out page, tap <strong>Scan QR Code</strong>, allow camera access, and point the
+    phone at the poster. The system recognises the location and clocks the employee in or out automatically.</p>
     <p>The sign-in lasts for the browsing session and is limited to the location whose QR code was scanned. Tap
     <strong>Sign out</strong> (or close the browser) to end it.</p>
 
@@ -120,6 +130,7 @@
         <tr><td>&ldquo;Invalid credentials&rdquo; when signing in</td><td>Check the email/password or use the forgot-password flow.</td></tr>
         <tr><td>Employee cannot sign in at a scan point</td><td>Confirm the employee is active and the code/PIN are correct; confirm the location is active.</td></tr>
         <tr><td>The QR code no longer works</td><td>The location&rsquo;s token was regenerated &mdash; print the new QR code from Locations.</td></tr>
+        <tr><td>The Time In button is greyed out</td><td>The employee has already clocked in today &mdash; only one clock-in and one clock-out are allowed per day.</td></tr>
         <tr><td>&ldquo;Too many attempts&rdquo; on sign-in</td><td>Wait about a minute and try again.</td></tr>
         <tr><td>Manager cannot see another location&rsquo;s data</td><td>Managers are intentionally limited to their assigned location; an admin can adjust the assignment.</td></tr>
         <tr><td>PDF reports look odd in some viewers</td><td>Download the Excel version instead, or use a recent PDF viewer.</td></tr>

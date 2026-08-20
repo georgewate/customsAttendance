@@ -156,14 +156,18 @@ class ScanController extends Controller
         $employee = Auth::guard('employee')->user();
         abort_unless($employee, 403);
 
-        $latest = $employee->latestLogToday();
-
-        if ($type === 'time_in' && $latest?->type === 'time_in') {
-            return back()->with('error', 'Already clocked in since '.$latest->scanned_at->format('g:i A').'.');
+        if ($type === 'time_in' && $employee->clockedInToday()) {
+            return back()->with('error', "You've already clocked in today.");
         }
 
-        if ($type === 'time_out' && $latest?->type !== 'time_in') {
-            return back()->with('error', "You're not currently clocked in.");
+        if ($type === 'time_out') {
+            if ($employee->clockedOutToday()) {
+                return back()->with('error', "You've already clocked out today.");
+            }
+
+            if (! $employee->clockedInToday()) {
+                return back()->with('error', "You're not currently clocked in.");
+            }
         }
 
         $setting = AttendanceSetting::current();

@@ -116,6 +116,13 @@
                                 </svg>
                                 <span class="flex-1">{{ __('Settings') }}</span>
                             </a>
+                            <a href="{{ route('admin.audit-logs.index') }}"
+                               class="flex items-center gap-2 rounded-control px-3 py-2 text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.audit-logs.*') ? 'bg-primary-500/15 text-white' : 'text-neutral-400 hover:bg-white/5 hover:text-white' }}">
+                                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span class="flex-1">{{ __('Audit Log') }}</span>
+                            </a>
                         </div>
                     </div>
                 @endif
@@ -231,6 +238,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
                     {{ __('Settings') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.audit-logs.index')" :active="request()->routeIs('admin.audit-logs.*')">
+                    {{ __('Audit Log') }}
                 </x-responsive-nav-link>
             @endif
         </div>

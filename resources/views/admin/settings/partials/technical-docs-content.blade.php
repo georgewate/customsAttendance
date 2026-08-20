@@ -34,7 +34,7 @@
         <tr><th>Concern</th><th>Technology</th></tr>
         <tr><td>Framework</td><td>Laravel 13 (PHP 8.5)</td></tr>
         <tr><td>Database</td><td>SQLite (single file, WAL-friendly)</td></tr>
-        <tr><td>Front-end</td><td>Blade, Tailwind CSS 3, Alpine.js 3, Chart.js 4</td></tr>
+        <tr><td>Front-end</td><td>Blade, Tailwind CSS 3, Alpine.js 3, Chart.js 4, html5-qrcode (camera QR scanning)</td></tr>
         <tr><td>Assets</td><td>Vite 8 (Laravel Vite plugin)</td></tr>
         <tr><td>Reports</td><td>PhpSpreadsheet (.xlsx), barryvdh/laravel-dompdf (report PDF), CSV</td></tr>
         <tr><td>Documentation PDFs</td><td>Playwright + headless Chromium (user guide, technical docs)</td></tr>
@@ -44,12 +44,14 @@
     <h2>3. Directory layout</h2>
     <table>
         <tr><th>Path</th><th>Purpose</th></tr>
-        <tr><td><code>app/Http/Controllers/</code></td><td>Web controllers (<code>ScanController</code>) and admin controllers under <code>Admin/</code> (Dashboard, Attendance, Employee, Location, Report, User, Settings).</td></tr>
+        <tr><td><code>app/Http/Controllers/</code></td><td>Web controllers (<code>ScanController</code>), the employee mobile-scan controller under <code>Employee/ScanQrController</code>, and admin controllers under <code>Admin/</code> (Dashboard, Attendance, AttendanceSettings, AttendanceReason, AuditLog, Employee, Location, Report, User, Settings).</td></tr>
         <tr><td><code>app/Http/Middleware/EnsureUserHasRole.php</code></td><td>Role gate registered as the <code>role</code> alias.</td></tr>
-        <tr><td><code>app/Models/</code></td><td>Eloquent models: <code>User</code>, <code>Location</code>, <code>Employee</code>, <code>AttendanceLog</code>.</td></tr>
-        <tr><td><code>app/Services/PlaywrightPdf.php</code></td><td>Renders a Blade view to PDF via the Playwright Node script.</td></tr>
+        <tr><td><code>app/Models/</code></td><td>Eloquent models: <code>User</code>, <code>Location</code>, <code>Employee</code>, <code>AttendanceLog</code>, <code>AttendanceSetting</code>, <code>AttendanceReason</code>, <code>AuditLog</code>.</td></tr>
+        <tr><td><code>app/Services/</code></td><td><code>PlaywrightPdf</code> (docs PDFs), <code>AutoClockOutService</code>, <code>RotateQrCodesService</code>, <code>DeduplicateAttendanceLogsService</code>.</td></tr>
+        <tr><td><code>app/Console/Commands/</code></td><td><code>AutoClockOut</code> (<code>attendance:auto-clockout</code>), <code>RotateQrCodes</code> (<code>attendance:rotate-qr-codes</code>).</td></tr>
         <tr><td><code>routes/web.php</code>, <code>routes/admin.php</code>, <code>routes/auth.php</code></td><td>Route definitions.</td></tr>
-        <tr><td><code>resources/views/admin/</code></td><td>Back-office Blade views (dashboard, attendance, reports, settings, etc.).</td></tr>
+        <tr><td><code>resources/js/qr-scanner.js</code></td><td>Lazy-loaded camera overlay that decodes location QR codes and posts the token to the mobile scan endpoint.</td></tr>
+        <tr><td><code>resources/views/admin/</code></td><td>Back-office Blade views (dashboard, attendance, reports, settings, audit log, etc.).</td></tr>
         <tr><td><code>resources/views/scan/</code></td><td>Kiosk scan-screen views.</td></tr>
         <tr><td><code>scripts/pdf-html.mjs</code></td><td>Node script that converts an HTML file to a PDF with headless Chromium.</td></tr>
         <tr><td><code>tests/Feature/</code></td><td>Feature tests (PHPUnit).</td></tr>
@@ -103,9 +105,62 @@
         <tr><td>id</td><td>bigint PK</td><td></td></tr>
         <tr><td>employee_id</td><td>foreign key</td><td><code>cascadeOnDelete</code>; indexed with scanned_at</td></tr>
         <tr><td>location_id</td><td>foreign key</td><td><code>cascadeOnDelete</code></td></tr>
-        <tr><td>type</td><td>enum <code>time_in|time_out</code></td><td></td></tr>
+        <tr><td>type</td><td>enum <code>time_in|time_out</code></td><td>one clock-in and one clock-out per employee per day are enforced by the controllers</td></tr>
+        <tr><td>is_late</td><td>boolean</td><td>default false; clock-in after shift start</td></tr>
+        <tr><td>is_early_clock_out</td><td>boolean</td><td>default false; clock-out before shift end</td></tr>
+        <tr><td>clock_out_type</td><td>string, nullable</td><td><code>manual</code> or <code>auto</code></td></tr>
+        <tr><td>late_reason_id</td><td>foreign key, nullable</td><td>&rarr; <code>attendance_reasons</code> (<code>nullOnDelete</code>)</td></tr>
+        <tr><td>late_reason_text</td><td>string, nullable</td><td>custom late-arrival reason</td></tr>
+        <tr><td>early_clock_out_reason_id</td><td>foreign key, nullable</td><td>&rarr; <code>attendance_reasons</code> (<code>nullOnDelete</code>)</td></tr>
+        <tr><td>early_clock_out_reason_text</td><td>string, nullable</td><td>custom early clock-out reason</td></tr>
+        <tr><td>reason_submitted_at</td><td>timestamp, nullable</td><td></td></tr>
+        <tr><td>reason_status</td><td>enum <code>pending|approved|rejected</code>, nullable</td><td>reason review state</td></tr>
+        <tr><td>reason_reviewed_by</td><td>foreign key, nullable</td><td>&rarr; <code>users</code> (<code>nullOnDelete</code>)</td></tr>
+        <tr><td>reason_reviewed_at</td><td>timestamp, nullable</td><td></td></tr>
+        <tr><td>reason_review_note</td><td>string, nullable</td><td></td></tr>
         <tr><td>scanned_at</td><td>timestamp</td><td></td></tr>
+        <tr><td>auto_clocked_out_at</td><td>timestamp, nullable</td><td>set when the automatic clock-out job closes an open shift</td></tr>
         <tr><td>timestamps</td><td></td><td></td></tr>
+    </table>
+
+    <h3><code>attendance_settings</code></h3>
+    <p>A single-row settings table (seeded on creation).</p>
+    <table>
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td>id</td><td>bigint PK</td><td></td></tr>
+        <tr><td>shift_start_time</td><td>string</td><td>default <code>09:00</code>; late threshold</td></tr>
+        <tr><td>shift_end_time</td><td>string</td><td>default <code>17:00</code>; early clock-out threshold</td></tr>
+        <tr><td>reason_text_max_length</td><td>unsigned integer</td><td>default 255</td></tr>
+        <tr><td>auto_clock_out_time</td><td>string</td><td>default <code>15:00</code></td></tr>
+        <tr><td>auto_clock_out_enabled</td><td>boolean</td><td>default false</td></tr>
+        <tr><td>auto_renew_qr_enabled</td><td>boolean</td><td>default false; when true, location QR tokens rotate once a day</td></tr>
+        <tr><td>updated_by</td><td>foreign key, nullable</td><td>&rarr; <code>users</code> (<code>nullOnDelete</code>)</td></tr>
+        <tr><td>timestamps</td><td></td><td></td></tr>
+    </table>
+
+    <h3><code>attendance_reasons</code></h3>
+    <table>
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td>id</td><td>bigint PK</td><td></td></tr>
+        <tr><td>category</td><td>enum <code>late_arrival|early_clock_out</code></td><td></td></tr>
+        <tr><td>name</td><td>string</td><td></td></tr>
+        <tr><td>description</td><td>string, nullable</td><td></td></tr>
+        <tr><td>active</td><td>boolean</td><td>default true</td></tr>
+        <tr><td>created_by / updated_by</td><td>foreign key, nullable</td><td>&rarr; <code>users</code> (<code>nullOnDelete</code>)</td></tr>
+        <tr><td>timestamps</td><td></td><td></td></tr>
+        <tr><td>deleted_at</td><td>timestamp, nullable</td><td>soft deletes</td></tr>
+    </table>
+
+    <h3><code>audit_logs</code></h3>
+    <table>
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td>id</td><td>bigint PK</td><td></td></tr>
+        <tr><td>employee_id</td><td>foreign key, nullable</td><td><code>nullOnDelete</code></td></tr>
+        <tr><td>user_id</td><td>foreign key, nullable</td><td><code>nullOnDelete</code></td></tr>
+        <tr><td>action</td><td>string</td><td>indexed with created_at</td></tr>
+        <tr><td>description</td><td>text, nullable</td><td></td></tr>
+        <tr><td>metadata</td><td>json, nullable</td><td>before/after values, IDs, etc.</td></tr>
+        <tr><td>created_at</td><td>timestamp</td><td></td></tr>
     </table>
 
     <h3>Framework tables</h3>
@@ -131,6 +186,7 @@
     </ul>
 
     <h2>6. QR scan flow</h2>
+    <h3>Kiosk (desktop / printed poster)</h3>
     <ol>
         <li>The location QR code encodes the URL <code>/scan/{qr_token}</code>.</li>
         <li>Visiting the URL calls <code>ScanController::show</code>; if no scan session exists for that location, the sign-in step is shown.</li>
@@ -138,6 +194,23 @@
         <li><code>POST /scan/{qr_token}/time-in</code> / <code>time-out</code> insert an <code>attendance_logs</code> row with the location and timestamp, then flash a result back to the kiosk.</li>
         <li><code>POST /scan/{qr_token}/logout</code> clears the scan session. Admin sessions are untouched.</li>
     </ol>
+    <h3>Mobile camera scan</h3>
+    <ol>
+        <li>The employee dashboard and the clock-in/out page expose a <strong>Scan QR Code</strong> button.</li>
+        <li><code>resources/js/qr-scanner.js</code> opens a camera overlay, lazily loading <code>html5-qrcode</code>.</li>
+        <li>The decoded text is parsed for a <code>/scan/{token}</code> URL or a raw 32-character token.</li>
+        <li><code>POST /employee/scan-qr</code> (<code>Employee\ScanQrController::toggle</code>, throttled 30/min) looks up the active location and toggles the employee&rsquo;s clock state: clock in if not clocked in today, clock out if clocked in, and rejects the request if the employee already clocked out today.</li>
+    </ol>
+    <h3>Daily QR rotation</h3>
+    <ul>
+        <li>When <code>attendance_settings.auto_renew_qr_enabled</code> is true, the scheduled <code>attendance:rotate-qr-codes</code> command (<code>RotateQrCodesService</code>, registered in <code>bootstrap/app.php</code>) regenerates every active location&rsquo;s <code>qr_token</code> once a day, invalidating previously printed posters.</li>
+        <li>Each rotation is written to <code>audit_logs</code> (<code>action = qr_codes_rotated</code>) with the affected location IDs.</li>
+    </ul>
+    <h3>One clock-in / one clock-out per day</h3>
+    <p>Both the kiosk (<code>ScanController</code>) and the mobile toggle enforce at most one <code>time_in</code> and one
+    <code>time_out</code> per employee per day via <code>Employee::clockedInToday()</code> / <code>Employee::clockedOutToday()</code>.
+    The <code>2026_08_20_000002</code> migration (<code>DeduplicateAttendanceLogsService</code>) cleaned up historical duplicates,
+    keeping the earliest clock-in and latest clock-out per day, and recorded the result in <code>audit_logs</code>.</p>
 
     <h2>7. Reports &amp; exports</h2>
     <ul>
@@ -176,20 +249,21 @@
     <h2>10. Security hardening</h2>
     <table>
         <tr><th>Control</th><th>Implementation</th></tr>
-        <tr><td>Security headers</td><td>Global <code>SecurityHeaders</code> middleware: <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy</code>, and <code>Strict-Transport-Security</code> over HTTPS.</td></tr>
-        <tr><td>Brute-force protection</td><td>Rate limits on login, password reset, verification, scan login and time-in/out.</td></tr>
+        <tr><td>Security headers</td><td>Global <code>SecurityHeaders</code> middleware: <code>X-Frame-Options: DENY</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy</code>, <code>Permissions-Policy: geolocation=(), microphone=(), camera=(self)</code>, and <code>Strict-Transport-Security</code> over HTTPS. The camera policy allows the mobile QR scanner on the app&rsquo;s own origin only.</td></tr>
+        <tr><td>Brute-force protection</td><td>Rate limits on login, password reset, verification, scan login, time-in/out, and the mobile scan endpoint (30/min).</td></tr>
         <tr><td>CSRF</td><td>Laravel CSRF verification on every form; tokens present on all scan and admin forms.</td></tr>
         <tr><td>Credentials</td><td>Passwords and PINs stored as bcrypt hashes (<code>pin_hash</code>).</td></tr>
         <tr><td>Session hygiene</td><td>Session ID regenerated on login; <code>HttpOnly</code> + <code>Secure</code> cookie flags.</td></tr>
         <tr><td>Mass assignment</td><td>All models whitelist fields via <code>#[Fillable]</code>.</td></tr>
         <tr><td>Output escaping</td><td>Blade escapes all output; no raw <code>@verbatim{!! !!}@endverbatim</code> echo sites.</td></tr>
+        <tr><td>Audit coverage</td><td><code>audit_logs</code> records attendance reasons, edits, approvals/rejections, QR rotations, and one-off maintenance jobs; reviewable in the admin <strong>Audit Log</strong> page.</td></tr>
         <tr><td>Dependency audits</td><td><code>composer audit</code> and <code>npm audit</code> report no known vulnerabilities.</td></tr>
     </table>
 
     <h2>11. Testing</h2>
     <ul>
         <li>PHPUnit feature tests in <code>tests/Feature</code> run against in-memory SQLite.</li>
-        <li>Coverage includes admin/manager access control, the scan flow, dashboards, reports, settings docs, and security headers.</li>
+        <li>Coverage includes admin/manager access control, the scan flow, dashboards, reports, attendance reasons/settings, the one-clock-in/one-clock-out rule, the mobile scan endpoint, the audit-log viewer, deduplication, settings docs, and security headers.</li>
         <li>Run with <code>php artisan test</code>; code style with <code>vendor/bin/pint</code>.</li>
     </ul>
 </div>

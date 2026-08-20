@@ -52,4 +52,24 @@ class Employee extends Authenticatable
             ->latest('scanned_at')
             ->first();
     }
+
+    public function clockedInToday(?string $timezone = null): bool
+    {
+        $now = now($timezone);
+
+        return $this->attendanceLogs()
+            ->where('type', 'time_in')
+            ->whereDate('scanned_at', $now->toDateString())
+            ->exists();
+    }
+
+    public function clockedOutToday(?string $timezone = null): bool
+    {
+        $now = now($timezone);
+
+        return $this->attendanceLogs()
+            ->where('type', 'time_out')
+            ->whereDate('scanned_at', $now->toDateString())
+            ->exists();
+    }
 }

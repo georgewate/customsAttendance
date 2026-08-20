@@ -2,6 +2,7 @@
 
 import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
+import './qr-scanner';
 
 window.Alpine = Alpine;
 window.Chart = Chart;

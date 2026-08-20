@@ -16,6 +16,7 @@ class EmployeeController extends Controller
         $employees = $this->scopedEmployees($request)
             ->with('homeLocation')
             ->orderBy('name')
+            ->when($request->input('status') === 'active', fn ($query) => $query->where('active', true))
             ->paginate(20);
 
         return view('admin.employees.index', compact('employees'));

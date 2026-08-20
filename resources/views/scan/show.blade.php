@@ -6,6 +6,7 @@
 
         $isClockedIn = $latest?->type === 'time_in';
         $hasCheckedOut = $latest?->type === 'time_out';
+        $hasCheckedInToday = $todayLogs->contains(fn ($log) => $log->type === 'time_in');
         $autoOut = $hasCheckedOut && ($latest?->wasAutoClockedOut() ?? false);
         $lateToday = $todayLogs->contains(fn ($log) => $log->type === 'time_in' && $log->is_late);
 
@@ -87,21 +88,23 @@
                     @csrf
 
                     <button type="submit" aria-label="Clock in"
-                        class="flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-control py-4 text-lg font-semibold text-white transition-colors duration-150 {{ $isClockedIn ? 'cursor-not-allowed bg-success-300 dark:bg-success-500/30' : 'bg-success-600 shadow-card hover:bg-success-500' }}"
-                        @disabled($isClockedIn)>
+                        class="flex min-h-[3.5rem] w-full items-center justify-center gap-2 rounded-control py-4 text-lg font-semibold text-white transition-colors duration-150 {{ ($isClockedIn || $hasCheckedInToday) ? 'cursor-not-allowed bg-success-300 dark:bg-success-500/30' : 'bg-success-600 shadow-card hover:bg-success-500' }}"
+                        @disabled($isClockedIn || $hasCheckedInToday)>
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
                         </svg>
                         <span>
                             @if ($isClockedIn)
                                 Clocked In
+                            @elseif ($hasCheckedInToday)
+                                Clocked Out
                             @else
                                 Time In
                             @endif
                         </span>
                     </button>
 
-                    @if ($isClockedIn)
+                    @if ($hasCheckedInToday)
                         <div class="rounded-control border border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                             <div class="flex items-start gap-2">
                                 <svg class="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -243,6 +246,18 @@
                         </div>
                     </div>
                 </form>
+            </div>
+
+            <div class="mt-4 border-t border-neutral-100 pt-4 dark:border-white/5">
+                <button type="button"
+                    data-qr-scanner
+                    data-scan-url="{{ route('employee.scan-qr') }}"
+                    class="flex w-full items-center justify-center gap-2 rounded-control bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-card transition-colors duration-150 hover:bg-primary-500 dark:bg-primary-600 dark:hover:bg-primary-500">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Scan QR Code
+                </button>
             </div>
 
             @if ($setting->auto_clock_out_enabled)

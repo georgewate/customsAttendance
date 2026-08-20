@@ -66,6 +66,33 @@ class DashboardTest extends TestCase
         $response->assertDontSee($otherEmployee->name);
     }
 
+    public function test_dashboard_cards_link_to_relevant_pages(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $location = Location::factory()->create();
+        $employee = Employee::factory()->create(['home_location_id' => $location->id]);
+
+        AttendanceLog::factory()->create([
+            'employee_id' => $employee->id,
+            'location_id' => $location->id,
+            'type' => 'time_in',
+        ]);
+
+        $today = now()->toDateString();
+
+        $response = $this->actingAs($admin)->get('/dashboard');
+
+        $response->assertOk();
+        $response->assertSee(route('admin.attendance.index', ['filter' => 'on-clock', 'from' => $today, 'to' => $today]));
+        $response->assertSee(route('admin.attendance.index', ['from' => $today, 'to' => $today]));
+        $response->assertSee(route('admin.attendance.index', ['filter' => 'late']));
+        $response->assertSee(route('admin.attendance.index', ['filter' => 'early']));
+        $response->assertSee(route('admin.employees.index', ['status' => 'active']));
+        $response->assertSee(route('admin.locations.index'));
+        $response->assertSee(route('admin.attendance.reports'));
+        $response->assertDontSee('open-modal');
+    }
+
     public function test_dashboard_counts_employees_checked_in_today(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

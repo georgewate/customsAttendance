@@ -49,6 +49,25 @@
                 @endif
             </form>
 
+            @if ($activeFilter)
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="badge badge-info">
+                        @switch($activeFilter)
+                            @case('late')
+                                Showing: Late arrivals
+                                @break
+                            @case('early')
+                                Showing: Early clock-outs
+                                @break
+                            @case('on-clock')
+                                Showing: Employees currently on the clock
+                                @break
+                        @endswitch
+                    </span>
+                    <a href="{{ route('admin.attendance.index') }}" class="btn-link">Clear filter</a>
+                </div>
+            @endif
+
             <div class="card">
                 <div class="overflow-x-auto">
                     <table class="table">

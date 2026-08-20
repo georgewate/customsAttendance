@@ -60,14 +60,14 @@ class SettingsController extends Controller
         return [
             [
                 'name' => 'QR Attendance Scan (employee-facing kiosk, no login account required)',
-                'note' => 'Scoped by the location\'s QR token in the URL. No session cookie is required to view the page, but time-in/time-out require an active employee scan-session established via the login step below.',
+                'note' => 'Scoped by the location\'s QR token in the URL. No session cookie is required to view the page, but time-in/time-out require an active employee scan-session established via the login step below. Each employee may clock in once and clock out once per day; a second time-in or time-out is rejected.',
                 'endpoints' => [
                     [
                         'method' => 'GET',
                         'path' => '/scan/{qr_token}',
                         'description' => 'Shows the location\'s scan screen. Redirects to the employee code/PIN step if no active scan-session exists for this location.',
                         'params' => 'None',
-                        'response' => 'HTML page with Time In / Time Out buttons, or the sign-in form.',
+                        'response' => 'HTML page with Time In / Time Out buttons and a Scan QR Code (camera) button, or the sign-in form.',
                     ],
                     [
                         'method' => 'POST',
@@ -79,14 +79,14 @@ class SettingsController extends Controller
                     [
                         'method' => 'POST',
                         'path' => '/scan/{qr_token}/time-in',
-                        'description' => 'Records a time-in scan for the signed-in employee at this location.',
+                        'description' => 'Records a time-in scan for the signed-in employee at this location. Rejected if the employee already clocked in today.',
                         'params' => 'None (uses the active scan-session). Throttled to 30 requests/minute.',
                         'response' => 'Redirect back to the scan screen with a success/error flash message.',
                     ],
                     [
                         'method' => 'POST',
                         'path' => '/scan/{qr_token}/time-out',
-                        'description' => 'Records a time-out scan for the signed-in employee at this location.',
+                        'description' => 'Records a time-out scan for the signed-in employee at this location. Rejected if the employee already clocked out today.',
                         'params' => 'None (uses the active scan-session). Throttled to 30 requests/minute.',
                         'response' => 'Redirect back to the scan screen with a success/error flash message.',
                     ],
@@ -96,6 +96,13 @@ class SettingsController extends Controller
                         'description' => 'Ends the employee\'s scan-session for this location (does not affect admin/manager login sessions).',
                         'params' => 'None',
                         'response' => 'Redirect back to the sign-in step.',
+                    ],
+                    [
+                        'method' => 'POST',
+                        'path' => '/employee/scan-qr',
+                        'description' => 'Mobile camera scan. The employee signs in once via a scan-session (POST /scan/{qr_token}/login), then the QR scanner decodes a location poster and posts its token here to toggle the clock: time-in if not yet clocked in today, time-out if clocked in, 422 if already clocked out today.',
+                        'params' => 'Body (form): token (the location\'s qr_token). Throttled to 30 requests/minute.',
+                        'response' => 'JSON {ok: true, type: "time_in"|"time_out", message} or {ok: false, message} on rejection.',
                     ],
                 ],
             ],
@@ -147,9 +154,9 @@ class SettingsController extends Controller
                     [
                         'method' => 'GET',
                         'path' => '/dashboard',
-                        'description' => 'Analytics overview scoped to the signed-in manager\'s location (admins see all locations). KPI cards open detail modals with live lists.',
+                        'description' => 'Analytics overview scoped to the signed-in manager\'s location (admins see all locations). KPI cards are links that jump to the matching filtered records (late arrivals, on the clock, checked in today, etc.).',
                         'params' => 'None',
-                        'response' => 'HTML dashboard with Chart.js charts and KPI cards.',
+                        'response' => 'HTML dashboard with Chart.js charts and KPI-card links.',
                         'auth' => true,
                     ],
                 ],
@@ -185,7 +192,7 @@ class SettingsController extends Controller
                     [
                         'method' => 'GET',
                         'path' => '/admin/attendance/settings',
-                        'description' => 'Attendance settings page (admin only): configure the automatic clock-out time and enable/disable automatic clock-out. Shows the current time, status, last updated timestamp and the user who last saved.',
+                        'description' => 'Attendance settings page (admin only): shift start/end times, reason text max length, automatic clock-out time, automatic clock-out toggle, and daily QR auto-renewal. Shows the current time, status, last updated timestamp and the user who last saved.',
                         'params' => 'None.',
                         'response' => 'HTML settings form.',
                         'auth' => true,
@@ -193,8 +200,8 @@ class SettingsController extends Controller
                     [
                         'method' => 'POST',
                         'path' => '/admin/attendance/settings',
-                        'description' => 'Saves the automatic clock-out configuration (validates a real time of day).',
-                        'params' => 'Body (form): auto_clock_out_time (HH:MM), auto_clock_out_enabled (1 or absent).',
+                        'description' => 'Saves the attendance configuration (validates real times of day).',
+                        'params' => 'Body (form): shift_start_time (HH:MM), shift_end_time (HH:MM), reason_text_max_length (int), auto_clock_out_time (HH:MM), auto_clock_out_enabled (1 or absent), auto_renew_qr_enabled (1 or absent).',
                         'response' => 'Redirect back to the settings page with a success flash.',
                         'auth' => true,
                     ],
@@ -307,6 +314,14 @@ class SettingsController extends Controller
                         'auth' => true,
                     ],
                     [
+                        'method' => 'CLI',
+                        'path' => 'php artisan attendance:rotate-qr-codes',
+                        'description' => 'Scheduled command (daily) that regenerates every active location\'s QR token when auto_renew_qr_enabled is on, invalidating previously printed posters. Each rotation is written to audit_logs.',
+                        'params' => 'Runs automatically via php artisan schedule:run; also runs through the scheduler registered in bootstrap/app.php.',
+                        'response' => 'Console output listing how many locations were rotated.',
+                        'auth' => true,
+                    ],
+                    [
                         'method' => 'POST',
                         'path' => '/admin/locations/{location}/regenerate-token',
                         'description' => 'Rotates a location\'s QR token, invalidating its previously printed QR code.',
@@ -388,6 +403,20 @@ class SettingsController extends Controller
                         'description' => 'Downloads the technical documentation as a PDF.',
                         'params' => 'None',
                         'response' => 'PDF file download.',
+                        'auth' => true,
+                    ],
+                ],
+            ],
+            [
+                'name' => 'Audit Log',
+                'note' => 'Requires an authenticated session with role admin. Records attendance reasons, edits, approvals/rejections, QR rotations, and maintenance jobs.',
+                'endpoints' => [
+                    [
+                        'method' => 'GET',
+                        'path' => '/admin/audit-logs',
+                        'description' => 'Lists audit entries (newest first), filterable by action and date range, paginated at 20 per page.',
+                        'params' => 'Query: action, from (date), to (date).',
+                        'response' => 'HTML page with a filter form and a table of entries including metadata details.',
                         'auth' => true,
                     ],
                 ],

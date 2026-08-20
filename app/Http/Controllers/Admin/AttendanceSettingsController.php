@@ -30,9 +30,11 @@ class AttendanceSettingsController extends Controller
             'shift_start_time' => ['required', 'string', 'date_format:H:i'],
             'shift_end_time' => ['required', 'string', 'date_format:H:i'],
             'reason_text_max_length' => ['required', 'integer', 'min:10', 'max:2000'],
+            'auto_renew_qr_enabled' => ['sometimes', 'boolean'],
         ])->validate();
 
         $enabled = $request->boolean('auto_clock_out_enabled');
+        $autoRenewQr = $request->boolean('auto_renew_qr_enabled');
 
         $old = $setting->only([
             'auto_clock_out_time',
@@ -40,6 +42,7 @@ class AttendanceSettingsController extends Controller
             'shift_start_time',
             'shift_end_time',
             'reason_text_max_length',
+            'auto_renew_qr_enabled',
         ]);
 
         $setting->update([
@@ -48,6 +51,7 @@ class AttendanceSettingsController extends Controller
             'shift_start_time' => $data['shift_start_time'],
             'shift_end_time' => $data['shift_end_time'],
             'reason_text_max_length' => $data['reason_text_max_length'],
+            'auto_renew_qr_enabled' => $autoRenewQr,
             'updated_by' => Auth::id(),
         ]);
 

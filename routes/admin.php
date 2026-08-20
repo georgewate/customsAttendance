@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AttendanceReasonController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AttendanceSettingsController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\LocationController;
@@ -34,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('locations/{location}/qr', [LocationController::class, 'qr'])->name('locations.qr');
         Route::post('locations/{location}/regenerate-token', [LocationController::class, 'regenerateToken'])->name('locations.regenerate-token');
         Route::resource('users', UserController::class)->except('show');
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::get('settings/api-docs/pdf', [SettingsController::class, 'apiDocsPdf'])->name('settings.api-docs.pdf');

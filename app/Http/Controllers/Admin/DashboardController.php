@@ -81,42 +81,7 @@ class DashboardController extends Controller
                 ->latest('scanned_at')
                 ->limit(10)
                 ->get(),
-            'checkedInEmployees' => $this->employeeRows($todayLogs->where('type', 'time_in')),
-            'onClockEmployees' => $this->employeeRows($latestPerEmployee->where('type', 'time_in')),
-            'checkedOutEmployees' => $this->employeeRows($latestPerEmployee->where('type', 'time_out')),
-            'absentEmployees' => $activeEmployees
-                ->whereNotIn('id', $latestPerEmployee->keys())
-                ->map(fn (Employee $employee) => [
-                    'name' => $employee->name,
-                    'code' => $employee->employee_code,
-                    'location' => $employee->homeLocation?->name,
-                ])
-                ->values(),
-            'activeEmployeeList' => $activeEmployees->map(fn (Employee $employee) => [
-                'name' => $employee->name,
-                'code' => $employee->employee_code,
-                'location' => $employee->homeLocation?->name,
-            ]),
-            'todayLogs' => $todayLogs->map(fn (AttendanceLog $log) => [
-                'name' => $log->employee->name,
-                'code' => $log->employee->employee_code,
-                'type' => $log->type,
-                'time' => $log->scanned_at->format('g:i A'),
-            ])->values(),
         ]);
-    }
-
-    private function employeeRows($logs)
-    {
-        return $logs->groupBy('employee_id')->map(function ($group) {
-            $first = $group->sortBy('scanned_at')->first();
-
-            return [
-                'name' => $first->employee->name,
-                'code' => $first->employee->employee_code,
-                'time' => $first->scanned_at->format('g:i A'),
-            ];
-        })->values();
     }
 
     private function weeklyTrend($logsQuery): array

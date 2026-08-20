@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\RedirectIfEmployeeNotAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,17 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
-            'employee.auth' => \App\Http\Middleware\RedirectIfEmployeeNotAuthenticated::class,
+            'role' => EnsureUserHasRole::class,
+            'employee.auth' => RedirectIfEmployeeNotAuthenticated::class,
         ]);
 
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(SecurityHeaders::class);
 
         $middleware->trustProxies(at: '*');
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('attendance:auto-clockout')
             ->everyMinute()
+            ->withoutOverlapping();
+
+        $schedule->command('attendance:rotate-qr-codes')
+            ->daily()
             ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

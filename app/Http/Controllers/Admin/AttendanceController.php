@@ -39,6 +39,15 @@ class AttendanceController extends Controller
             ->sortByDesc(fn (array $row) => $row['date']->toDateTimeString())
             ->values();
 
+        $activeFilter = $request->input('filter');
+
+        $rows = match ($activeFilter) {
+            'late' => $rows->filter(fn (array $row) => (bool) $row['time_in']?->is_late)->values(),
+            'early' => $rows->filter(fn (array $row) => (bool) $row['time_out']?->is_early_clock_out)->values(),
+            'on-clock' => $rows->filter(fn (array $row) => $row['time_in'] && ! $row['time_out'])->values(),
+            default => $rows,
+        };
+
         $page = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 30;
 
@@ -55,6 +64,7 @@ class AttendanceController extends Controller
         return view('admin.attendance.index', [
             'logs' => $logs,
             'locations' => $locations,
+            'activeFilter' => $activeFilter,
             'lateReasons' => AttendanceReason::active()
                 ->forCategory(AttendanceReason::CATEGORY_LATE)
                 ->orderBy('name')
